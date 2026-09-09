@@ -145,6 +145,10 @@ a {
   font-size: 1.05rem;
 }
 
+.hero p + p {
+  margin-top: 1.3rem;
+}
+
 /* 홈의 세 입구 */
 .gateways {
   border-top: 1px solid var(--rule);
@@ -453,4 +457,175 @@ a {
 
 .item:hover .byline {
   color: inherit;
+}
+
+/* --- 목록으로 가는 문 ("읽은 것" 아래) ---------------------------- */
+
+.drawer {
+  display: block;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 2rem 0;
+  margin-top: 3.5rem;
+  transition: color 0.18s ease;
+}
+
+.drawer:hover {
+  color: var(--accent);
+}
+
+.drawer .row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.drawer h2 {
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.drawer p {
+  margin: 0.55rem 0 0;
+  max-width: var(--measure);
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.drawer:hover p {
+  color: inherit;
+}
+
+.count {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* --- 목록 화면의 검색·정렬줄 -------------------------------------- */
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.controls input[type="search"] {
+  flex: 1;
+  min-width: 11rem;
+  appearance: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.92rem;
+  border: 0;
+  padding: 0.35rem 0;
+  border-radius: 0;
+}
+
+.controls input[type="search"]:focus {
+  outline: none;
+}
+
+.controls input[type="search"]::placeholder {
+  color: var(--muted);
+}
+
+.sorts {
+  display: flex;
+  gap: 1.1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.sorts button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.sorts button:hover {
+  color: var(--text);
+}
+
+.sorts button[data-on="true"] {
+  color: var(--text);
+}
+
+.tally {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- 200줄 목록 --------------------------------------------------- */
+
+.booklist {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 줄이 200개라 기본 구분선이 그대로면 시끄럽다. 이 목록 안에서만 옅게 */
+.booklist {
+  --rule: color-mix(in oklab, var(--rule) 55%, transparent);
+}
+
+.book {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--rule);
+  transition: color 0.18s ease;
+}
+
+.book:hover {
+  color: var(--accent);
+}
+
+.book .t {
+  letter-spacing: -0.005em;
+}
+
+/* .byline은 "읽은 것" 목록에서 쓰던 것을 그대로 재사용한다 */
+.book .byline {
+  margin-left: 0;
+}
+
+.book .yr {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.book:hover .byline,
+.book:hover .yr {
+  color: inherit;
+}
+
+/* 따로 쓴 글이 있는 책 */
+.book.has-note .t {
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--accent);
 }

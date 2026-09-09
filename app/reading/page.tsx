@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { getEntries, formatMonth } from "@/lib/content";
+import { getEntries, getArchive, formatMonth } from "@/lib/content";
 
 export const metadata = { title: "읽은 것 — Eunchan Joe" };
 
 export default function ReadingPage() {
   const books = getEntries("reading");
+  const archive = getArchive();
 
   return (
     <>
@@ -12,8 +13,8 @@ export default function ReadingPage() {
         <p className="eyebrow">Reading</p>
         <h1>읽은 것</h1>
         <p>
-          읽은 책과 그에 대해 남은 생각들. 서평이라기보다는, 읽고 나서 내 쪽에 무엇이
-          달라졌는지를 적어둡니다.
+          책이 한 말은 이미 책에 적혀 있으니, 여기에는 그 말 때문에 내 쪽에서 달라진
+          자리를 적습니다. 동의하지 못한 대목도 함께 적습니다.
         </p>
       </div>
 
@@ -34,6 +35,16 @@ export default function ReadingPage() {
             </Link>
           ))}
         </div>
+      )}
+
+      {archive && (
+        <Link href="/reading/archive" className="drawer">
+          <div className="row">
+            <h2>{archive.title}</h2>
+            <span className="count">{archive.count}권</span>
+          </div>
+          {archive.summary && <p>{archive.summary}</p>}
+        </Link>
       )}
     </>
   );
