@@ -441,3 +441,16 @@ a {
   color: var(--muted);
   font-size: 0.95rem;
 }
+
+/* "읽은 것" 목록에서 제목 옆의 지은이 */
+.byline {
+  font-size: 0.82rem;
+  font-weight: 350;
+  color: var(--muted);
+  margin-left: 0.7rem;
+  letter-spacing: 0;
+}
+
+.item:hover .byline {
+  color: inherit;
+}

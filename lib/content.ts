@@ -17,6 +17,8 @@ export type Entry = {
   summary?: string;
   /** "만든 것"에서 외부로 나가는 링크 */
   link?: string;
+  /** "읽은 것"의 지은이 */
+  author?: string;
   /** 본문을 HTML로 변환한 것 */
   html: string;
 };
@@ -52,17 +54,20 @@ function readDir(dir: string): Entry[] {
         tag: data.tag ? String(data.tag) : undefined,
         summary: data.summary ? String(data.summary) : undefined,
         link: data.link ? String(data.link) : undefined,
+        author: data.author ? String(data.author) : undefined,
         html: marked.parse(content, { async: false }) as string,
       };
     })
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
-export function getEntries(dir: "me" | "work" | "writing"): Entry[] {
+export type Section = "me" | "work" | "writing" | "reading";
+
+export function getEntries(dir: Section): Entry[] {
   return readDir(dir);
 }
 
-export function getEntry(dir: "me" | "work" | "writing", slug: string): Entry | undefined {
+export function getEntry(dir: Section, slug: string): Entry | undefined {
   return readDir(dir).find((e) => e.slug === slug);
 }
 
