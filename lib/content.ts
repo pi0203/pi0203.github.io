@@ -21,6 +21,20 @@ export type Entry = {
   html: string;
 };
 
+/**
+ * YAML은 따옴표 없는 2026-09-08을 Date 객체로 바꿔버린다.
+ * 그대로 String()에 넣으면 "Tue Sep 08 2026 00:00:00 GMT+0000..."이 되므로
+ * 항상 YYYY-MM-DD로 되돌린다.
+ */
+function toISODate(value: unknown): string {
+  if (value instanceof Date) {
+    return new Date(value.getTime() - value.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 10);
+  }
+  return value ? String(value) : "";
+}
+
 function readDir(dir: string): Entry[] {
   const full = path.join(CONTENT_DIR, dir);
   if (!fs.existsSync(full)) return [];
@@ -34,7 +48,7 @@ function readDir(dir: string): Entry[] {
       return {
         slug: name.replace(/\.md$/, ""),
         title: String(data.title ?? name.replace(/\.md$/, "")),
-        date: String(data.date ?? ""),
+        date: toISODate(data.date),
         tag: data.tag ? String(data.tag) : undefined,
         summary: data.summary ? String(data.summary) : undefined,
         link: data.link ? String(data.link) : undefined,
