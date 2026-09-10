@@ -1,15 +1,28 @@
 /* ---------------------------------------------------------------
    디자인의 기본값. 색과 간격은 전부 여기서 나온다.
    장식을 더하는 대신 타이포그래피와 여백으로 정돈한다.
+
+   색은 하늘빛 바탕 + 산호빛 포인트.
+   바다가 아니라 하늘로 읽히도록 채도보다 밝기로 만든다.
+   선까지 하늘빛으로 두는 것이 전체 인상을 가볍게 하는 데 제일 크게 작용한다.
+
+   대비는 계산해서 맞췄다 (WCAG AA 4.5:1 기준):
+     라이트 — text 16.2:1 / muted 4.9:1 / accent 4.8:1
+     다크   — text 15.0:1 / muted 5.9:1 / accent 7.6:1
+   --accent는 글자에 쓰므로 AA를 넘겨야 한다. 더 밝은 산호가 필요하면
+   --glow를 쓴다 (장식 전용, 글자에 쓰지 말 것).
    --------------------------------------------------------------- */
 
 :root {
-  --bg: #fbfaf7;
-  --surface: #f4f1ea;
-  --text: #1b1a17;
-  --muted: #7c766b;
-  --rule: #e3ded3;
-  --accent: #b2492c;
+  --bg: #f4f9ff;
+  --surface: #e9f2fb;
+  --text: #141c26;
+  --muted: #5f6e80;
+  --rule: #d8e6f5;
+  --accent: #c2431a;
+  --glow: #f2683c;
+  /* 화면 맨 위에 아주 옅게 깔리는 하늘. 거의 안 보여야 한다 */
+  --wash: #dcecff;
 
   --serif: var(--font-display), "Times New Roman", serif;
   --sans: var(--font-body), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
@@ -20,14 +33,17 @@
   --page: 46rem;
 }
 
+/* 밤바다가 아니라 땅거미 진 하늘 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141311;
-    --surface: #1d1b18;
-    --text: #ece8e0;
-    --muted: #8f887c;
-    --rule: #2d2a25;
-    --accent: #d9765a;
+    --bg: #131a23;
+    --surface: #1c242f;
+    --text: #e8eef5;
+    --muted: #8a97a8;
+    --rule: #2a3441;
+    --accent: #ff8a63;
+    --glow: #ff9d7a;
+    --wash: #1a2532;
   }
 }
 
@@ -41,7 +57,10 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background-color: var(--bg);
+  /* 위쪽만 살짝 밝은 하늘. 스크롤해도 따라오지 않게 고정하지 않는다 */
+  background-image: linear-gradient(to bottom, var(--wash) 0, var(--bg) 30rem);
+  background-repeat: no-repeat;
   color: var(--text);
   font-family: var(--sans);
   font-size: 1rem;
@@ -104,7 +123,7 @@ a {
 
 .nav a:hover,
 .nav a[data-active="true"] {
-  color: var(--text);
+  color: var(--accent);
 }
 
 .page {
