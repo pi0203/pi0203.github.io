@@ -712,3 +712,27 @@ a {
     gap: 1.1rem;
   }
 }
+
+/* --- 목록 화면의 주의문 -------------------------------------------- */
+
+.notice {
+  max-width: var(--measure);
+  margin: 0 0 3rem;
+  padding: 1.1rem 0 1.1rem 1.25rem;
+  border-left: 2px solid var(--accent);
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.notice p {
+  margin: 0 0 0.8rem;
+}
+
+.notice p:last-child {
+  margin-bottom: 0;
+}
+
+.notice strong {
+  color: var(--text);
+  font-weight: 500;
+}

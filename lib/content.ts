@@ -65,7 +65,8 @@ function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
 
   return fs
     .readdirSync(full)
-    .filter((name) => name.endsWith(".md"))
+    // _로 시작하는 파일은 항목이 아니다 (주의문 같은 공용 조각)
+    .filter((name) => name.endsWith(".md") && !name.startsWith("_"))
     .map((name) => ({ name, ...parseFile(path.join(full, name)) }))
     .filter(({ data }) => isList(data) === opts.lists)
     .map(({ name, data, body }) => ({
@@ -193,6 +194,18 @@ export function getList(dir: Section, slug: string): Archive | null {
     books,
     count: books.length,
   };
+}
+
+/**
+ * 섹션 공용 주의문. `content/<섹션>/_notice.md`가 있으면 그 본문을 HTML로 돌려준다.
+ * 목록 화면 세 곳에 같은 문구가 들어가므로 파일 하나로 두고 불러 쓴다.
+ */
+export function getNotice(dir: Section): string | null {
+  const file = path.join(CONTENT_DIR, dir, "_notice.md");
+  if (!fs.existsSync(file)) return null;
+  const { body } = parseFile(file);
+  if (!body.trim()) return null;
+  return marked.parse(body, { async: false }) as string;
 }
 
 /** 2026-09-09 -> 2026년 9월 */

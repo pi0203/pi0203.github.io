@@ -5,6 +5,7 @@ import {
   getEntry,
   getListSummaries,
   getList,
+  getNotice,
   formatMonth,
 } from "@/lib/content";
 import ArchiveList from "@/components/archive-list";
@@ -36,6 +37,7 @@ export default async function ReadingDetail({
   // 목록이면 표를 그린다
   const list = getList("reading", slug);
   if (list) {
+    const notice = getNotice("reading");
     return (
       <>
         <div className="pagehead">
@@ -43,6 +45,10 @@ export default async function ReadingDetail({
           <h1>{list.title}</h1>
           <div className="prose" dangerouslySetInnerHTML={{ __html: list.intro }} />
         </div>
+
+        {notice && (
+          <div className="notice" dangerouslySetInnerHTML={{ __html: notice }} />
+        )}
 
         <ArchiveList books={list.books} />
 

@@ -5,6 +5,7 @@ import {
   getEntry,
   getListSummaries,
   getList,
+  getNotice,
   formatMonth,
 } from "@/lib/content";
 import ArchiveList from "@/components/archive-list";
@@ -34,6 +35,7 @@ export default async function WatchingDetail({
 
   const list = getList("watching", slug);
   if (list) {
+    const notice = getNotice("watching");
     return (
       <>
         <div className="pagehead">
@@ -41,6 +43,10 @@ export default async function WatchingDetail({
           <h1>{list.title}</h1>
           <div className="prose" dangerouslySetInnerHTML={{ __html: list.intro }} />
         </div>
+        {notice && (
+          <div className="notice" dangerouslySetInnerHTML={{ __html: notice }} />
+        )}
+
         <ArchiveList books={list.books} />
         <Link href="/watching" className="backlink">
           &larr; 본 것
