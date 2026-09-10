@@ -7,22 +7,25 @@
    선까지 하늘빛으로 두는 것이 전체 인상을 가볍게 하는 데 제일 크게 작용한다.
 
    대비는 계산해서 맞췄다 (WCAG AA 4.5:1 기준):
-     라이트 — text 16.2:1 / muted 4.9:1 / accent 4.8:1
+     라이트 — text 14.5:1 / muted 5.6:1 / accent 5.4:1
      다크   — text 15.0:1 / muted 5.9:1 / accent 7.6:1
+   바탕을 하늘색으로 내린 만큼 글자색도 함께 진하게 했다. 이 조합이 AA 한계선 근처라
+   바탕을 더 진하게 하려면 글자색을 또 조정해야 한다.
    --accent는 글자에 쓰므로 AA를 넘겨야 한다. 더 밝은 산호가 필요하면
    --glow를 쓴다 (장식 전용, 글자에 쓰지 말 것).
    --------------------------------------------------------------- */
 
 :root {
-  --bg: #f4f9ff;
-  --surface: #e9f2fb;
-  --text: #141c26;
-  --muted: #5f6e80;
-  --rule: #d8e6f5;
-  --accent: #c2431a;
-  --glow: #f2683c;
-  /* 화면 맨 위에 아주 옅게 깔리는 하늘. 거의 안 보여야 한다 */
-  --wash: #dcecff;
+  --bg: #e0ecf9;
+  /* 바탕이 하늘색이라 얹히는 면은 바탕보다 밝게 — 그래야 떠 보인다 */
+  --surface: #eef5fc;
+  --text: #131b25;
+  --muted: #4f5d73;
+  --rule: #c3d8ee;
+  --accent: #a93814;
+  --glow: #e8613c;
+  /* 화면 맨 위에 깔리는 하늘 */
+  --wash: #cfe2f7;
 
   --serif: var(--font-display), "Times New Roman", serif;
   --sans: var(--font-body), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
@@ -33,9 +36,16 @@
   --page: 46rem;
 }
 
-/* 밤바다가 아니라 땅거미 진 하늘 */
+/* ---------------------------------------------------------------
+   다크 — 밤바다가 아니라 땅거미 진 하늘.
+
+   같은 토큰을 두 곳에 둔다. 한 곳에만 두면 토글이 한 방향으로만 듣는다.
+     · @media  — 기기가 다크이고 사용자가 라이트를 고르지 않았을 때
+     · [data-theme="dark"] — 사용자가 직접 골랐을 때 (기기 설정을 이긴다)
+   --------------------------------------------------------------- */
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #131a23;
     --surface: #1c242f;
     --text: #e8eef5;
@@ -45,6 +55,17 @@
     --glow: #ff9d7a;
     --wash: #1a2532;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #131a23;
+  --surface: #1c242f;
+  --text: #e8eef5;
+  --muted: #8a97a8;
+  --rule: #2a3441;
+  --accent: #ff8a63;
+  --glow: #ff9d7a;
+  --wash: #1a2532;
 }
 
 * {
@@ -653,4 +674,37 @@ a {
   text-underline-offset: 0.22em;
   text-decoration-thickness: 1px;
   text-decoration-color: var(--accent);
+}
+
+/* --- 머리말 오른쪽: 네비 + 밝기 버튼 ------------------------------ */
+
+.mastnav {
+  display: flex;
+  align-items: baseline;
+  gap: 1.4rem;
+}
+
+.themetoggle {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.themetoggle:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 30rem) {
+  .mastnav {
+    gap: 1rem;
+  }
+  .nav {
+    gap: 1.1rem;
+  }
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Instrument_Serif, Noto_Sans_KR } from "next/font/google";
+import ThemeToggle from "@/components/theme-toggle";
 import "./globals.css";
 
 const display = Instrument_Serif({
@@ -30,22 +31,39 @@ const NAV = [
   { href: "/writing", label: "Writing" },
 ];
 
+/**
+ * 첫 페인트 전에 저장된 값을 붙인다. 이게 없으면 어둡게를 골라둔 사람이
+ * 새로고침할 때마다 밝은 화면을 한 번씩 보게 된다.
+ */
+const THEME_INIT = `
+try {
+  var t = localStorage.getItem("theme");
+  if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+} catch (e) {}
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
+      </head>
       <body className={`${display.variable} ${body.variable}`}>
         <div className="shell">
           <header className="masthead">
             <Link href="/" className="wordmark">
               Eunchan Joe
             </Link>
-            <nav className="nav">
-              {NAV.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <div className="mastnav">
+              <nav className="nav">
+                {NAV.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+              <ThemeToggle />
+            </div>
           </header>
 
           <main className="page">{children}</main>
