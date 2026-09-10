@@ -9,8 +9,14 @@ export type Entry = {
   /** 파일명에서 온 주소 조각 */
   slug: string;
   title: string;
-  /** YYYY-MM-DD. 정렬과 표시에 쓴다 */
+  /** YYYY-MM-DD. 글을 쓴 날. 정렬과 표시에 쓴다 */
   date: string;
+  /**
+   * 글이 다루는 시기. `date`가 쓴 날이라면 이쪽은 "언제의 나에 대한 글인가"다.
+   * 2021년 이야기를 2026년에 적을 수 있으므로 둘은 다르다.
+   * 연도 하나("2021")든 범위("2020–2022")든 자유. 없으면 화면에 안 나온다.
+   */
+  about?: string;
   /** "나" 항목의 자유로운 분류. 없어도 된다 */
   tag?: string;
   /** 목록에 보일 한 줄. 없으면 목록에서 생략된다 */
@@ -78,6 +84,8 @@ function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
       slug: name.replace(/\.md$/, ""),
       title: String(data.title ?? name.replace(/\.md$/, "")),
       date: toISODate(data.date),
+      // toISODate를 거치지 않는다 — 연도만 적거나 범위로 적을 수 있어야 한다
+      about: data.about ? String(data.about) : undefined,
       tag: data.tag ? String(data.tag) : undefined,
       summary: data.summary ? String(data.summary) : undefined,
       link: data.link ? String(data.link) : undefined,

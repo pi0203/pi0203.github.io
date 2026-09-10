@@ -24,6 +24,8 @@ export default function MePage() {
             <article key={note.slug} className="note">
               <div className="meta">
                 {formatMonth(note.date)}
+                {/* 다루는 시기가 따로 있을 때만. 없으면 쓴 날짜만 남는다 */}
+                {note.about && <span className="about">{note.about}년에 대해</span>}
                 {note.tag && <span className="tag">{note.tag}</span>}
               </div>
               <div>
