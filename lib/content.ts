@@ -114,7 +114,8 @@ export type ArchiveBook = {
   order: number;
   title: string;
   author?: string;
-  year?: string;
+  /** 셋째 칸. 연도든 과목이든 목록마다 뜻이 다르다. 오른쪽에 작게 붙는다 */
+  note?: string;
   /** 같은 제목의 글이 따로 있으면 그 주소 조각. 자동으로 이어진다 */
   slug?: string;
 };
@@ -172,7 +173,7 @@ export function getList(dir: Section, slug: string): Archive | null {
       order: books.length,
       title: cells[0],
       author: cells[1] || undefined,
-      year: cells[2] || undefined,
+      note: cells[2] || undefined,
     });
   }
 

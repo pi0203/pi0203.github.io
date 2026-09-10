@@ -62,7 +62,7 @@ export default function ArchiveList({ books }: { books: ArchiveBook[] }) {
             <>
               <span className="t">{book.title}</span>
               {book.author && <span className="byline">{book.author}</span>}
-              {book.year && <span className="yr">{book.year.slice(0, 4)}</span>}
+              {book.note && <span className="yr">{book.note}</span>}
             </>
           );
 
