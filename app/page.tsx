@@ -4,6 +4,7 @@ const GATEWAYS = [
   { href: "/me", ko: "나", en: "Me", desc: "기억날 때마다 하나씩 적어두는, 형식 없는 기록" },
   { href: "/work", ko: "만든 것", en: "Work", desc: "직접 만들었거나 만들고 있는 것들" },
   { href: "/reading", ko: "읽은 것", en: "Reading", desc: "읽은 책과 그 뒤에 남은 생각" },
+  { href: "/watching", ko: "본 것", en: "Watching", desc: "재밌게 본 영화와 드라마" },
   { href: "/writing", ko: "글", en: "Writing", desc: "조금 길게 쓴 글" },
 ];
 

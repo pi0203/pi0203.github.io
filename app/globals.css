@@ -489,6 +489,12 @@ a {
   transition: color 0.18s ease;
 }
 
+/* 목록이 여러 개일 때 붙여 쌓는다 — 선이 겹치지 않게 */
+.drawer + .drawer {
+  margin-top: 0;
+  border-top: 0;
+}
+
 .drawer:hover {
   color: var(--accent);
 }

@@ -1,11 +1,16 @@
 import Link from "next/link";
-import { getEntries, getArchive, formatMonth } from "@/lib/content";
+import {
+  getEntries,
+  getListSummaries,
+  getList,
+  formatMonth,
+} from "@/lib/content";
 
 export const metadata = { title: "읽은 것 — Eunchan Joe" };
 
 export default function ReadingPage() {
   const books = getEntries("reading");
-  const archive = getArchive();
+  const lists = getListSummaries("reading");
 
   return (
     <>
@@ -13,8 +18,7 @@ export default function ReadingPage() {
         <p className="eyebrow">Reading</p>
         <h1>읽은 것</h1>
         <p>
-          책이 한 말은 이미 책에 적혀 있으니, 여기에는 그 말 때문에 내 쪽에서 달라진
-          자리를 적습니다. 동의하지 못한 대목도 함께 적습니다.
+          읽은 책과 그에 대해 남은 생각. 아래에는 따로 모아둔 목록들이 있습니다.
         </p>
       </div>
 
@@ -37,15 +41,18 @@ export default function ReadingPage() {
         </div>
       )}
 
-      {archive && (
-        <Link href="/reading/archive" className="drawer">
-          <div className="row">
-            <h2>{archive.title}</h2>
-            <span className="count">{archive.count}권</span>
-          </div>
-          {archive.summary && <p>{archive.summary}</p>}
-        </Link>
-      )}
+      {lists.map((list) => {
+        const full = getList("reading", list.slug);
+        return (
+          <Link key={list.slug} href={`/reading/${list.slug}`} className="drawer">
+            <div className="row">
+              <h2>{list.title}</h2>
+              {full && <span className="count">{full.count}권</span>}
+            </div>
+            {list.summary && <p>{list.summary}</p>}
+          </Link>
+        );
+      })}
     </>
   );
 }

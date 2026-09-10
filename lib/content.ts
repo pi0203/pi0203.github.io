@@ -37,52 +37,70 @@ function toISODate(value: unknown): string {
   return value ? String(value) : "";
 }
 
-export type Section = "me" | "work" | "writing" | "reading";
+export type Section = "me" | "work" | "writing" | "reading" | "watching";
+
+/** 파일 하나를 읽어 앞머리와 본문으로 나눈다. 앞머리가 깨져도 예외를 던지지 않는다 */
+function parseFile(full: string): { data: Record<string, unknown>; body: string } {
+  const raw = fs.readFileSync(full, "utf8");
+  try {
+    const parsed = matter(raw);
+    return { data: parsed.data as Record<string, unknown>, body: parsed.content };
+  } catch {
+    // 앞머리가 깨졌으면 전체를 본문으로 취급한다
+    return { data: {}, body: raw };
+  }
+}
 
 /**
- * content/<섹션>/ 안에 있지만 낱개 항목이 아닌 파일.
- *
- * archive.md는 자체 페이지(app/reading/archive/)를 갖는다. 여기서 걸러내지 않으면
- * [slug] 경로가 /reading/archive/를 한 번 더 만들어 정적 내보내기가 충돌한다.
- * 이 목록이 그 이름의 유일한 출처다 — 지우거나 옮기지 말 것.
+ * 앞머리에 list: true 가 있으면 낱개 글이 아니라 목록이다.
+ * 목록은 표를 담고 자체 화면으로 그려진다. 낱개 글 목록에는 섞이지 않는다.
  */
-const RESERVED: Partial<Record<Section, ReadonlySet<string>>> = {
-  reading: new Set(["archive"]),
-};
+function isList(data: Record<string, unknown>): boolean {
+  return data.list === true;
+}
 
-function readDir(dir: Section): Entry[] {
+function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
   const full = path.join(CONTENT_DIR, dir);
   if (!fs.existsSync(full)) return [];
-
-  const reserved = RESERVED[dir];
 
   return fs
     .readdirSync(full)
     .filter((name) => name.endsWith(".md"))
-    .filter((name) => !reserved?.has(name.replace(/\.md$/, "")))
-    .map((name) => {
-      const raw = fs.readFileSync(path.join(full, name), "utf8");
-      const { data, content } = matter(raw);
-      return {
-        slug: name.replace(/\.md$/, ""),
-        title: String(data.title ?? name.replace(/\.md$/, "")),
-        date: toISODate(data.date),
-        tag: data.tag ? String(data.tag) : undefined,
-        summary: data.summary ? String(data.summary) : undefined,
-        link: data.link ? String(data.link) : undefined,
-        author: data.author ? String(data.author) : undefined,
-        html: marked.parse(content, { async: false }) as string,
-      };
-    })
+    .map((name) => ({ name, ...parseFile(path.join(full, name)) }))
+    .filter(({ data }) => isList(data) === opts.lists)
+    .map(({ name, data, body }) => ({
+      slug: name.replace(/\.md$/, ""),
+      title: String(data.title ?? name.replace(/\.md$/, "")),
+      date: toISODate(data.date),
+      tag: data.tag ? String(data.tag) : undefined,
+      summary: data.summary ? String(data.summary) : undefined,
+      link: data.link ? String(data.link) : undefined,
+      author: data.author ? String(data.author) : undefined,
+      html: marked.parse(body, { async: false }) as string,
+    }))
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
+/** 낱개 글만 (목록은 빠진다) */
 export function getEntries(dir: Section): Entry[] {
-  return readDir(dir);
+  return readDir(dir, { lists: false });
 }
 
+/** 목록만 — /reading/ 화면 아래에 문으로 뜨는 것들 */
+export function getListSummaries(dir: Section): Entry[] {
+  return readDir(dir, { lists: true });
+}
+
+/** 낱개 글이든 목록이든, 슬러그로 하나 찾는다 */
 export function getEntry(dir: Section, slug: string): Entry | undefined {
-  return readDir(dir).find((e) => e.slug === slug);
+  return [...readDir(dir, { lists: false }), ...readDir(dir, { lists: true })].find(
+    (e) => e.slug === slug,
+  );
+}
+
+/** 이 슬러그가 목록인가 */
+export function isListSlug(dir: Section, slug: string): boolean {
+  return readDir(dir, { lists: true }).some((e) => e.slug === slug);
 }
 
 /* ---------------------------------------------------------------
@@ -119,27 +137,18 @@ function isSeparatorRow(cells: string[]): boolean {
 }
 
 /**
- * content/reading/archive.md를 읽는다.
+ * 목록 파일 하나를 읽는다. `list: true`가 붙은 어떤 파일이든 된다.
  *
  * 이 함수는 어떤 입력에도 예외를 던지지 않는다. 앞머리가 깨져도, 표가 망가져도,
- * 그 줄 하나가 빠질 뿐 사이트는 계속 선다. 손으로 200줄을 채우는 파일이라
+ * 그 줄 하나가 빠질 뿐 사이트는 계속 선다. 손으로 수백 줄을 채우는 파일이라
  * 오타 하나로 배포가 멈추면 안 된다.
  */
-export function getArchive(): Archive | null {
-  const file = path.join(CONTENT_DIR, "reading", "archive.md");
+export function getList(dir: Section, slug: string): Archive | null {
+  const file = path.join(CONTENT_DIR, dir, `${slug}.md`);
   if (!fs.existsSync(file)) return null;
 
-  const raw = fs.readFileSync(file, "utf8");
-
-  let data: Record<string, unknown> = {};
-  let body = raw;
-  try {
-    const parsed = matter(raw);
-    data = parsed.data as Record<string, unknown>;
-    body = parsed.content;
-  } catch {
-    // 앞머리가 깨졌으면 전체를 본문으로 취급한다
-  }
+  const { data, body } = parseFile(file);
+  if (!isList(data)) return null;
 
   const books: ArchiveBook[] = [];
   const intro: string[] = [];
@@ -170,7 +179,7 @@ export function getArchive(): Archive | null {
   // 같은 제목으로 쓴 글이 나중에 생기면 목록 행이 알아서 그 글로 이어진다.
   // 목록에 주소를 적어 넣을 필요가 없다.
   const byTitle = new Map(
-    getEntries("reading").map((e) => [e.title.replace(/\s+/g, ""), e.slug]),
+    getEntries(dir).map((e) => [e.title.replace(/\s+/g, ""), e.slug]),
   );
   for (const book of books) {
     book.slug = byTitle.get(book.title.replace(/\s+/g, ""));
