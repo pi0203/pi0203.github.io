@@ -66,9 +66,7 @@ export default async function WatchingDetail({
           {formatMonth(item.date)}
         </div>
         {item.then && (
-          <p className="then">
-            그때 적어둔 것을 옮긴 글입니다. 지금 생각과 다를 수 있습니다.
-          </p>
+          <p className="then">{item.date.slice(0, 4)}년에 적어둔 것을 옮겼습니다.</p>
         )}
         <h1>{item.title}</h1>
       </header>
