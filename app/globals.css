@@ -736,3 +736,11 @@ a {
   color: var(--text);
   font-weight: 500;
 }
+
+/* 그때 적어둔 것을 옮긴 글 — 지금 생각으로 읽히지 않게 갈라준다 */
+.then {
+  margin: 0.9rem 0 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}

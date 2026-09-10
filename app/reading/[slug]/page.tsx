@@ -70,6 +70,11 @@ export default async function ReadingDetail({
           {book.author && <>{book.author} &middot; </>}
           {formatMonth(book.date)}
         </div>
+        {book.then && (
+          <p className="then">
+            그때 적어둔 것을 옮긴 글입니다. 지금 생각과 다를 수 있습니다.
+          </p>
+        )}
         <h1>{book.title}</h1>
       </header>
       <div className="prose" dangerouslySetInnerHTML={{ __html: book.html }} />

@@ -65,6 +65,11 @@ export default async function WatchingDetail({
           {item.author && <>{item.author} &middot; </>}
           {formatMonth(item.date)}
         </div>
+        {item.then && (
+          <p className="then">
+            그때 적어둔 것을 옮긴 글입니다. 지금 생각과 다를 수 있습니다.
+          </p>
+        )}
         <h1>{item.title}</h1>
       </header>
       <div className="prose" dangerouslySetInnerHTML={{ __html: item.html }} />

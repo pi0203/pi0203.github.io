@@ -19,6 +19,11 @@ export type Entry = {
   link?: string;
   /** "읽은 것"의 지은이 */
   author?: string;
+  /**
+   * 그때 적어둔 것을 옮긴 글인가.
+   * 지금 쓴 글과 한 목록에 섞이면 현재 생각으로 읽히므로 화면에서 갈라준다.
+   */
+  then?: boolean;
   /** 본문을 HTML로 변환한 것 */
   html: string;
 };
@@ -77,6 +82,7 @@ function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
       summary: data.summary ? String(data.summary) : undefined,
       link: data.link ? String(data.link) : undefined,
       author: data.author ? String(data.author) : undefined,
+      then: data.then === true,
       html: marked.parse(body, { async: false }) as string,
     }))
     .sort((a, b) => b.date.localeCompare(a.date));
