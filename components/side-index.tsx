@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type Item = { slug: string; title: string; list?: true };
+type Item = { href: string; title: string; list?: true };
 
 /**
  * 넓은 화면에서만 왼쪽에 상시로 뜨는 목차.
@@ -25,10 +25,10 @@ export default function SideIndex({ index }: { index: Record<string, Item[]> }) 
     <nav className="sideindex" aria-label="이 칸에 있는 것">
       <ul>
         {items.map((it) => (
-          <li key={it.slug} className={it.list ? "islist" : undefined}>
+          <li key={it.href} className={it.list ? "islist" : undefined}>
             <Link
-              href={`/${section}/${it.slug}/`}
-              aria-current={it.slug === here ? "page" : undefined}
+              href={it.href}
+              aria-current={here && it.href.endsWith(`/${here}/`) ? "page" : undefined}
             >
               {it.title}
             </Link>

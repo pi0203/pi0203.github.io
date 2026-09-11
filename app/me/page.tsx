@@ -21,7 +21,7 @@ export default function MePage() {
       ) : (
         <div className="stream">
           {notes.map((note) => (
-            <article key={note.slug} className="note">
+            <article key={note.slug} id={note.anchor} className="note">
               <div className="meta">
                 {formatMonth(note.date)}
                 {/* 다루는 시기가 따로 있을 때만. 없으면 쓴 날짜만 남는다 */}

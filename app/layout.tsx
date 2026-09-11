@@ -4,7 +4,8 @@ import { Instrument_Serif, Noto_Sans_KR } from "next/font/google";
 import ThemeToggle from "@/components/theme-toggle";
 import Breadcrumb from "@/components/breadcrumb";
 import SideIndex from "@/components/side-index";
-import { getTitleMap, getSectionIndex } from "@/lib/content";
+import Toc from "@/components/toc";
+import { getTitleMap, getSectionIndex, getTocMap } from "@/lib/content";
 import "./globals.css";
 
 const display = Instrument_Serif({
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </header>
 
           <SideIndex index={getSectionIndex()} />
+          <Toc map={getTocMap()} />
           <Breadcrumb titles={getTitleMap()} />
 
           <main className="page">{children}</main>

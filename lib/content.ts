@@ -47,9 +47,19 @@ export type Entry = {
    * 지금 쓴 글과 한 목록에 섞이면 현재 생각으로 읽히므로 화면에서 갈라준다.
    */
   then?: boolean;
+  /**
+   * 이 항목으로 뛸 수 있는 이름. 파일명에서 날짜 앞머리를 뗀 것이다.
+   * 「나」는 상세 페이지가 없어 `/me/#<anchor>`로만 가리킬 수 있다.
+   */
+  anchor: string;
+  /** 본문의 소제목들. 오른쪽 목차가 쓴다. 없으면 빈 배열 */
+  headings: Heading[];
   /** 본문을 HTML로 변환한 것 */
   html: string;
 };
+
+/** 본문 안의 소제목 하나. `id`는 `html`의 `<h2 id=...>`와 같은 값이다 */
+export type Heading = { id: string; text: string };
 
 /**
  * YAML은 따옴표 없는 2026-09-08을 Date 객체로 바꿔버린다.
@@ -87,6 +97,43 @@ function isList(data: Record<string, unknown>): boolean {
   return data.list === true;
 }
 
+/**
+ * 제목 한 줄을 주소 조각으로. 한글은 그대로 두고 띄어쓰기와 기호만 정리한다.
+ * 비면 자리를 잃으므로 그때만 순번으로 대신한다.
+ */
+function slugify(text: string, fallback: number): string {
+  const s = text
+    .replace(/<[^>]+>/g, "")
+    .trim()
+    .replace(/[\s]+/g, "-")
+    .replace(/[^\p{L}\p{N}-]/gu, "");
+  return s || `n${fallback}`;
+}
+
+/**
+ * marked 18은 제목에 `id`를 안 붙인다. 목차가 뛸 자리가 없으므로 여기서 심는다.
+ *
+ * `id`에 **항목 이름을 앞에 붙인다.** 「나」는 여덟 글이 한 페이지에 겹쳐 있어서
+ * 「남는 질문」 같은 제목이 두 번 나오는데, 한 문서 안에 같은 `id`가 둘이면
+ * 앵커가 첫째로만 간다.
+ */
+function withHeadingIds(html: string, anchor: string): { html: string; headings: Heading[] } {
+  const headings: Heading[] = [];
+  const used = new Set<string>();
+
+  const out = html.replace(/<h2>([\s\S]*?)<\/h2>/g, (_all, inner: string) => {
+    const text = inner.replace(/<[^>]+>/g, "").trim();
+    let id = `${anchor}-${slugify(text, headings.length)}`;
+    // 한 글 안에서 같은 제목이 또 나오면 번호를 붙인다
+    for (let i = 2; used.has(id); i += 1) id = `${anchor}-${slugify(text, headings.length)}-${i}`;
+    used.add(id);
+    headings.push({ id, text });
+    return `<h2 id="${id}">${inner}</h2>`;
+  });
+
+  return { html: out, headings };
+}
+
 function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
   const full = path.join(CONTENT_DIR, dir);
   if (!fs.existsSync(full)) return [];
@@ -97,8 +144,16 @@ function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
     .filter((name) => name.endsWith(".md") && !name.startsWith("_"))
     .map((name) => ({ name, ...parseFile(path.join(full, name)) }))
     .filter(({ data }) => isList(data) === opts.lists)
-    .map(({ name, data, body }) => ({
-      slug: name.replace(/\.md$/, ""),
+    .map(({ name, data, body }) => {
+      const slug = name.replace(/\.md$/, "");
+      // 「나」의 파일명은 날짜로 시작한다. 주소 조각에서는 떼는 게 읽기 좋다
+      const anchor = slug.replace(/^\d{4}-\d{2}-\d{2}-/, "");
+      const parsed = withHeadingIds(
+        marked.parse(body, { async: false }) as string,
+        anchor,
+      );
+      return {
+      slug,
       title: String(data.title ?? name.replace(/\.md$/, "")),
       date: toISODate(data.date),
       // toISODate를 거치지 않는다 — 연도만 적거나 범위로 적을 수 있어야 한다
@@ -116,8 +171,11 @@ function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
       read: data.read ? String(data.read) : undefined,
       unread: data.unread === true,
       then: data.then === true,
-      html: marked.parse(body, { async: false }) as string,
-    }))
+      anchor,
+      headings: parsed.headings,
+      html: parsed.html,
+      };
+    })
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
@@ -328,8 +386,8 @@ export function getByStrand(): Map<string, StrandItem[]> {
         list.push({
           section,
           sectionKo: SECTION_KO[section],
-          // "나"는 상세 페이지가 없다
-          href: section === "me" ? undefined : `/${section}/${e.slug}/`,
+          // "나"는 상세 페이지가 없다. 대신 그 항목이 있는 자리로 보낸다
+          href: section === "me" ? `/me/#${e.anchor}` : `/${section}/${e.slug}/`,
           title: e.title,
           date: e.date,
           summary: e.summary,
@@ -368,19 +426,55 @@ export function getTitleMap(): Record<string, string> {
  * 위치 표시와 같은 이유로 빌드 때 만들어 넘긴다 — 곁단은 지금 주소를 봐야 하는데
  * 제목은 마크다운에만 있다. 목록을 먼저, 낱개 글을 뒤에 둔다.
  */
-export function getSectionIndex(): Record<string, { slug: string; title: string; list?: true }[]> {
-  const out: Record<string, { slug: string; title: string; list?: true }[]> = {};
+type IndexItem = { href: string; title: string; list?: true };
+
+export function getSectionIndex(): Record<string, IndexItem[]> {
+  const out: Record<string, IndexItem[]> = {};
   for (const section of Object.keys(SECTION_KO) as Section[]) {
-    if (section === "me") continue; // 상세 페이지가 없어 오갈 곳이 없다
+    // 「나」만 상세 페이지가 없다. 같은 화면 안의 자리로 보낸다
+    const to = (slug: string, anchor: string) =>
+      section === "me" ? `/me/#${anchor}` : `/${section}/${slug}/`;
     out[section] = [
       ...getListSummaries(section).map((e) => ({
-        slug: e.slug,
+        href: to(e.slug, e.anchor),
         title: e.title,
         list: true as const,
       })),
-      ...getEntries(section).map((e) => ({ slug: e.slug, title: e.title })),
+      ...getEntries(section).map((e) => ({ href: to(e.slug, e.anchor), title: e.title })),
     ];
   }
+  return out;
+}
+
+/** 오른쪽 목차의 한 덩어리. 「나」처럼 한 화면에 글이 여럿이면 여럿이 온다 */
+export type TocGroup = { title: string; anchor?: string; headings: Heading[] };
+
+/**
+ * 주소 → 그 화면 안의 소제목. 오른쪽 목차가 쓴다.
+ *
+ * 위치 표시·곁단 목차와 같은 방식이다 — 주소는 브라우저 쪽에서만 알 수 있고
+ * 소제목은 마크다운에만 있으니, 빌드 때 표로 만들어 넘긴다.
+ *
+ * **소제목이 둘 미만인 글은 넣지 않는다.** 한 줄짜리 목차는 길이 아니라 장식이다.
+ */
+export function getTocMap(): Record<string, TocGroup[]> {
+  const out: Record<string, TocGroup[]> = {};
+
+  for (const section of Object.keys(SECTION_KO) as Section[]) {
+    if (section === "me") {
+      // 「나」는 한 화면에 전부 흐른다. 항목별로 묶어서 한 벌로 넘긴다
+      const groups = getEntries("me")
+        .filter((e) => e.headings.length >= 2)
+        .map((e) => ({ title: e.title, anchor: e.anchor, headings: e.headings }));
+      if (groups.length) out["/me"] = groups;
+      continue;
+    }
+    for (const e of getEntries(section)) {
+      if (e.headings.length < 2) continue;
+      out[`/${section}/${e.slug}`] = [{ title: e.title, headings: e.headings }];
+    }
+  }
+
   return out;
 }
 
@@ -510,6 +604,82 @@ export function getSproutGraph(dir: Section = "reading"): SproutGraph {
   edges.sort((a, b) => order.indexOf(a.from) - order.indexOf(b.from));
 
   return { sources, targets: edges };
+}
+
+/* ---------------------------------------------------------------
+   전권 — 목록 세 개를 한 장에 담기 위한 자료.
+
+   그림의 축은 **적힌 순서**다. 연도는 못 쓴다 —
+   166권 중 56권이 연도 칸이 비어 있고, 파일 순서에서 연도가 뒤섞여 있다.
+   적힌 순서는 모든 행에 있고, 그게 곧 읽은 순서다.
+   --------------------------------------------------------------- */
+
+export type CorpusBook = {
+  title: string;
+  author?: string;
+  /** 셋째 칸. 목록마다 뜻이 다르다 — 연도이기도 하고 과목이기도 하다 */
+  note?: string;
+  /** 이 책에 쓴 글이 있으면 그 주소 조각 */
+  slug?: string;
+  /** 두 때를 담은 글인가 */
+  reread?: boolean;
+  /** 지금 와서 한 줄이 붙었는가 (넷째 칸) */
+  lined?: boolean;
+  /** 여기서 다른 책이 뻗어나갔는가 */
+  sprouts?: number;
+};
+
+export type CorpusBand = { slug: string; title: string; unread: boolean; books: CorpusBook[] };
+
+/**
+ * 목록 세 개를 순서대로 이어 붙인다. 이미 있는 `getList()`와 `getSproutGraph()`만 쓴다.
+ *
+ * **무엇을 진하게 그릴지는 여기서 정해진다** — 글이 있는가, 다시 봤는가,
+ * 한 줄이 붙었는가, 여기서 뻗어나갔는가. 넷 다 실제로 파일에 있는 것이다.
+ */
+export function getCorpus(dir: Section = "reading"): CorpusBand[] {
+  /*
+   * 같은 책을 두 파일이 다르게 부른다. 목록에는 서지대로 길게 적혀 있고
+   * (「과학자의 종교노트 (기독교 편)」, 「생태적 전환, 슬기로운 지구 생활을 위하여」)
+   * 「어디서」 칸에는 부르던 대로 짧게 적혀 있다.
+   * 파일을 고치지 않고, 앞머리까지 같이 대조한다 — 괄호·쉼표·콜론 앞에서 끊은 것.
+   */
+  const keys = (title: string) => {
+    const head = title.split(/[(,:—–-]/)[0];
+    const full = normTitle(title);
+    const short = normTitle(head);
+    return short && short !== full ? [full, short] : [full];
+  };
+
+  const fanout = new Map<string, number>();
+  for (const s of getSproutGraph(dir).sources) {
+    for (const k of keys(s.title)) fanout.set(k, s.fanout);
+  }
+
+  const bands: CorpusBand[] = [];
+  for (const summary of getListSummaries(dir)) {
+    const list = getList(dir, summary.slug);
+    if (!list) continue;
+    bands.push({
+      slug: summary.slug,
+      title: list.title,
+      unread: Boolean(summary.unread),
+      books: list.books.map((b) => ({
+        title: b.title,
+        author: b.author,
+        note: b.note,
+        slug: b.slug,
+        reread: b.reread,
+        lined: Boolean(b.now),
+        sprouts: keys(b.title).map((k) => fanout.get(k)).find(Boolean),
+      })),
+    });
+  }
+
+  // 읽은 것을 먼저, 많은 것을 먼저. 「읽고 싶은 책들」은 맨 끝에 온다
+  return bands.sort(
+    (a, b) => Number(a.unread) - Number(b.unread) || b.books.length - a.books.length,
+  );
 }
 
 /** 2026-09-09 -> 2026년 9월 */

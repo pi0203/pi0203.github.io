@@ -1409,3 +1409,187 @@ a {
     color: var(--accent);
   }
 }
+
+/* --- 오른쪽: 이 글 안의 목차 ------------------------------------ */
+
+/*
+ * 왼쪽 곁단과 답하는 질문이 다르다 — 왼쪽은 이 칸에 무엇이 있나,
+ * 오른쪽은 지금 읽는 글 안에 무엇이 있나.
+ *
+ * 왼쪽보다 늦게 띄운다. 72rem에서 양쪽을 다 켜면 가운데가 눌린다.
+ * 84rem(1344px)이면 --page 46rem을 뺀 여백이 한쪽에 304px씩 남는다.
+ */
+.toc {
+  display: none;
+}
+
+@media (min-width: 84rem) {
+  .toc {
+    display: block;
+    position: fixed;
+    top: 8.5rem;
+    right: calc(50% - var(--page) / 2 - 13rem);
+    width: 11rem;
+    max-height: calc(100dvh - 12rem);
+    overflow-y: auto;
+    font-size: 0.78rem;
+    line-height: 1.6;
+  }
+
+  .toc .cap {
+    margin: 0 0 0.5rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .toc section + section {
+    margin-top: 1rem;
+  }
+
+  /* 「나」처럼 한 화면에 글이 여럿일 때만 뜬다 */
+  .toc .owner {
+    display: block;
+    color: var(--text);
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .toc .owner:hover {
+    color: var(--accent);
+  }
+
+  .toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-right: 1px solid var(--rule);
+  }
+
+  .toc li {
+    padding: 0.28rem 0.8rem 0.28rem 0;
+    text-align: right;
+  }
+
+  .toc a {
+    color: var(--muted);
+    transition: color 0.18s ease;
+  }
+
+  .toc a:hover {
+    color: var(--accent);
+  }
+
+  /* 지금 읽고 있는 자리 */
+  .toc a[aria-current="location"] {
+    color: var(--text);
+  }
+}
+
+/* --- 전권 격자 — 점 하나가 한 권 --------------------------------- */
+
+.corpus {
+  margin-bottom: 1rem;
+}
+
+/*
+ * 안에 글자가 없어서 줄어들어도 모양이 남는다.
+ * 그래서 뻗어나간 그림과 달리 좁은 화면에서 숨기지 않는다.
+ */
+.corpus svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 26rem;
+}
+
+.corpus .band {
+  font-family: var(--sans);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  fill: var(--muted);
+}
+
+.corpus .band .n {
+  fill: var(--rule);
+}
+
+/* 읽고 지나간 책. 있었다는 것만 남긴다 */
+.corpus .dot.plain {
+  fill: var(--rule);
+}
+
+/* 지금 와서 한 줄이 달린 책 */
+.corpus .dot.lined {
+  fill: var(--muted);
+}
+
+/* 여기서 다른 책이 뻗어나간 책 — 속을 비우고 테로 표시한다 */
+.corpus .dot.sprout {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+/* 글이 붙은 책 */
+.corpus .dot.wrote {
+  fill: var(--accent);
+}
+
+.corpus a:hover .dot.wrote {
+  fill: var(--glow);
+}
+
+/* 두 때에 읽은 책에만 테를 하나 더 */
+.corpus .again {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+/* 범례 */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1rem;
+  max-width: var(--measure);
+  margin: 0 0 1.5rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.legend .k {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  margin-right: -0.6rem;
+}
+
+.legend .k.wrote {
+  background: var(--accent);
+}
+
+.legend .k.sprout {
+  border: 1.5px solid var(--accent);
+}
+
+.legend .k.again {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--accent);
+}
+
+.legend .k.lined {
+  background: var(--muted);
+}
+
+.legend .k.plain {
+  background: var(--rule);
+}
+
+.legend em {
+  flex-basis: 100%;
+  font-style: normal;
+  color: var(--rule);
+}
