@@ -32,6 +32,12 @@ export type Entry = {
   /** "읽은 것"의 지은이 */
   author?: string;
   /**
+   * 처음 읽은 때. `date`는 **이 글을 쓴 날**이고 이쪽은 **책을 읽은 때**다.
+   * 둘이 다르면 그 글은 다시 본 책이다 — 그때와 지금, 두 층을 담는다.
+   * 연도만("2020") 적어도 되므로 `toISODate()`를 거치지 않는다.
+   */
+  read?: string;
+  /**
    * 이 목록의 책들은 아직 안 읽은 것인가 (`list: true`인 파일에만 뜻이 있다).
    * "읽은 책이 몇 권인지"를 셀 때 이 목록은 빼야 한다.
    */
@@ -107,6 +113,7 @@ function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
       summary: data.summary ? String(data.summary) : undefined,
       link: data.link ? String(data.link) : undefined,
       author: data.author ? String(data.author) : undefined,
+      read: data.read ? String(data.read) : undefined,
       unread: data.unread === true,
       then: data.then === true,
       html: marked.parse(body, { async: false }) as string,
@@ -149,8 +156,16 @@ export type ArchiveBook = {
   author?: string;
   /** 셋째 칸. 연도든 과목이든 목록마다 뜻이 다르다. 오른쪽에 작게 붙는다 */
   note?: string;
+  /**
+   * 넷째 칸 — 지금 와서 이 책에 대해 드는 한 줄.
+   * **비어 있는 것이 기본이다.** 166칸을 채우는 일이 아니라,
+   * 떠오를 때 한 줄 더하는 자리다. 안 적으면 화면에 안 나온다.
+   */
+  now?: string;
   /** 같은 제목의 글이 따로 있으면 그 주소 조각. 자동으로 이어진다 */
   slug?: string;
+  /** 그 글이 두 때를 담고 있는가 (`read`가 있는가) — 다시 본 책 */
+  reread?: boolean;
 };
 
 export type Archive = {
@@ -207,16 +222,23 @@ export function getList(dir: Section, slug: string): Archive | null {
       title: cells[0],
       author: cells[1] || undefined,
       note: cells[2] || undefined,
+      // 넷째 칸까지만 읽는다. 다섯째부터는 여전히 무시 — 열을 늘려도 안 깨진다
+      now: cells[3] || undefined,
     });
   }
 
   // 같은 제목으로 쓴 글이 나중에 생기면 목록 행이 알아서 그 글로 이어진다.
   // 목록에 주소를 적어 넣을 필요가 없다.
   const byTitle = new Map(
-    getEntries(dir).map((e) => [e.title.replace(/\s+/g, ""), e.slug]),
+    getEntries(dir).map((e) => [
+      e.title.replace(/\s+/g, ""),
+      { slug: e.slug, reread: Boolean(e.read) },
+    ]),
   );
   for (const book of books) {
-    book.slug = byTitle.get(book.title.replace(/\s+/g, ""));
+    const hit = byTitle.get(book.title.replace(/\s+/g, ""));
+    book.slug = hit?.slug;
+    book.reread = hit?.reread;
   }
 
   return {

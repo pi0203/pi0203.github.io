@@ -68,7 +68,14 @@ export default async function ReadingDetail({
       <header>
         <div className="meta">
           {book.author && <>{book.author} &middot; </>}
-          {formatMonth(book.date)}
+          {/* 읽은 때가 따로 있으면 두 때를 같이 — 한 책이 두 때를 갖는다 */}
+          {book.read ? (
+            <>
+              {book.read}년에 읽고 &middot; {formatMonth(book.date)}에 적음
+            </>
+          ) : (
+            formatMonth(book.date)
+          )}
         </div>
         {book.then && (
           <p className="then">{book.date.slice(0, 4)}년에 적어둔 것을 옮겼습니다.</p>
