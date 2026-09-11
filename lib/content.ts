@@ -19,6 +19,12 @@ export type Entry = {
   about?: string;
   /** "나" 항목의 자유로운 분류. 없어도 된다 */
   tag?: string;
+  /**
+   * 이 항목이 걸리는 갈래(관심사). 섹션은 매체로 나뉘지만 생각은 관심사로 묶인다.
+   * 음식에 대한 책과 음식 앱이 다른 섹션에 있어도 같은 갈래로 이어진다.
+   * 앞머리에 `strand: 먹는 일, 재는 일`처럼 쉼표로 적는다. 없으면 아무 데도 안 걸린다.
+   */
+  strands?: string[];
   /** 목록에 보일 한 줄. 없으면 목록에서 생략된다 */
   summary?: string;
   /** "만든 것"에서 외부로 나가는 링크 */
@@ -87,6 +93,12 @@ function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
       // toISODate를 거치지 않는다 — 연도만 적거나 범위로 적을 수 있어야 한다
       about: data.about ? String(data.about) : undefined,
       tag: data.tag ? String(data.tag) : undefined,
+      strands: data.strand
+        ? String(data.strand)
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : undefined,
       summary: data.summary ? String(data.summary) : undefined,
       link: data.link ? String(data.link) : undefined,
       author: data.author ? String(data.author) : undefined,
@@ -220,6 +232,57 @@ export function getNotice(dir: Section): string | null {
   const { body } = parseFile(file);
   if (!body.trim()) return null;
   return marked.parse(body, { async: false }) as string;
+}
+
+/* ---------------------------------------------------------------
+   갈래 — 매체로 나뉜 섹션을 관심사로 가로지른다.
+   --------------------------------------------------------------- */
+
+/** 갈래 하나에 걸린 항목. 어느 섹션에서 왔는지를 함께 들고 다닌다 */
+export type StrandItem = {
+  section: Section;
+  /** 화면에 쓰는 섹션 이름 */
+  sectionKo: string;
+  /** 상세 페이지 주소. "나"는 상세가 없어 undefined */
+  href?: string;
+  title: string;
+  date: string;
+  summary?: string;
+};
+
+const SECTION_KO: Record<Section, string> = {
+  me: "나",
+  work: "만든 것",
+  writing: "글",
+  reading: "읽은 것",
+  watching: "본 것",
+};
+
+/**
+ * 다섯 섹션을 전부 훑어 갈래별로 모은다.
+ * 갈래를 안 적은 항목은 어디에도 안 걸린다 — 억지로 다 채우지 않는다.
+ */
+export function getByStrand(): Map<string, StrandItem[]> {
+  const out = new Map<string, StrandItem[]>();
+  for (const section of Object.keys(SECTION_KO) as Section[]) {
+    for (const e of getEntries(section)) {
+      for (const s of e.strands ?? []) {
+        const list = out.get(s) ?? [];
+        list.push({
+          section,
+          sectionKo: SECTION_KO[section],
+          // "나"는 상세 페이지가 없다
+          href: section === "me" ? undefined : `/${section}/${e.slug}/`,
+          title: e.title,
+          date: e.date,
+          summary: e.summary,
+        });
+        out.set(s, list);
+      }
+    }
+  }
+  for (const list of out.values()) list.sort((a, b) => b.date.localeCompare(a.date));
+  return out;
 }
 
 /** 2026-09-09 -> 2026년 9월 */

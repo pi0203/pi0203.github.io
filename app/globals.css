@@ -755,3 +755,90 @@ a {
   letter-spacing: 0.02em;
   color: var(--muted);
 }
+
+/* --- 갈래 (/threads) ------------------------------------------- */
+
+.strands {
+  border-top: 1px solid var(--rule);
+}
+
+.strand {
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.strand h2 {
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.9rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+/* 걸린 개수. 0이면 눈에 덜 띄게 둔다 */
+.strand h2 .count {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.strand ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.strand li {
+  display: grid;
+  grid-template-columns: 4.6rem 1fr auto;
+  align-items: baseline;
+  gap: 0.9rem;
+  padding: 0.45rem 0;
+  font-size: 0.93rem;
+}
+
+/* 어느 칸에서 왔는지 */
+.strand li .from {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.strand li a {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.strand li a:hover {
+  border-bottom-color: var(--glow);
+}
+
+/* "나"는 상세 페이지가 없어 링크가 아니다 */
+.strand li .plain {
+  color: var(--text);
+}
+
+.strand li time {
+  font-size: 0.76rem;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+.strand .empty {
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+@media (max-width: 40rem) {
+  .strand li {
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem 0.75rem;
+  }
+  .strand li .from {
+    grid-column: 1 / -1;
+  }
+}

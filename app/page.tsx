@@ -6,6 +6,7 @@ const GATEWAYS = [
   { href: "/reading", ko: "읽은 것", en: "Reading", desc: "읽은 책과 그 뒤에 남은 생각" },
   { href: "/watching", ko: "본 것", en: "Watching", desc: "재밌게 본 영화와 드라마" },
   { href: "/writing", ko: "글", en: "Writing", desc: "조금 길게 쓴 글" },
+  { href: "/threads", ko: "갈래", en: "Threads", desc: "칸을 가로질러, 같은 관심사에 걸리는 것들" },
 ];
 
 export default function Home() {
@@ -22,7 +23,9 @@ export default function Home() {
           놓여 있던 것도 그래서입니다.
         </p>
         <p>
-          궁금한 게 생기면 만들어보는 편이고, 계속 쓰고 배우는 사람으로 남고 싶습니다.
+          궁금한 게 생기면 만들어보는 편입니다. 음식과의 관계를 점검하는 도구를 만들려다
+          논문부터 읽게 된 것처럼, 알아보는 일과 만드는 일이 대개 붙어 있습니다.
+          그 앞뒤를 여기에 적어둡니다.
         </p>
       </section>
 
