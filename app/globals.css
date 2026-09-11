@@ -135,7 +135,11 @@ a {
 
 .nav {
   display: flex;
+  /* 항목이 일곱으로 늘었다. 안 감싸면 좁은 화면에서 가로로 넘친다 */
+  flex-wrap: wrap;
+  /* gap이 뒤에 오면 row-gap을 덮는다. 순서가 뜻을 바꾼다 */
   gap: 1.6rem;
+  row-gap: 0.5rem;
   font-size: 0.8rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -709,7 +713,10 @@ a {
 .mastnav {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 1.4rem;
+  /* 감싸고 나서도 줄어들 수 있어야 한다 */
+  min-width: 0;
 }
 
 .themetoggle {
@@ -734,6 +741,7 @@ a {
   }
   .nav {
     gap: 1.1rem;
+    row-gap: 0.45rem;
   }
 }
 
@@ -1140,4 +1148,264 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* --- 전체 지도 -------------------------------------------------- */
+
+.mapblock {
+  padding-top: 2.75rem;
+}
+
+.mapblock + .mapblock {
+  border-top: 1px solid var(--rule);
+}
+
+.mapblock h2 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin: 0 0 1rem;
+}
+
+.mapblock h2 a:hover {
+  color: var(--accent);
+}
+
+.mapblock h2 .desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.mapnote {
+  max-width: var(--measure);
+  margin: 0 0 1.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* 두 칸으로 흘린다. 지도는 촘촘한 편이 찾기 쉽다 */
+.maplist {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  columns: 2;
+  column-gap: 2rem;
+}
+
+.maplist li {
+  break-inside: avoid;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.28rem 0;
+  font-size: 0.92rem;
+}
+
+.maplist a {
+  color: inherit;
+  border-bottom: 1px solid transparent;
+}
+
+.maplist a:hover {
+  color: var(--accent);
+  border-bottom-color: currentColor;
+}
+
+.maplist .plain {
+  color: var(--muted);
+}
+
+.maplist .n {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 목록과 갈래는 한 칸으로 — 줄 수가 적어 두 칸이면 허전하다 */
+.maplist.wide {
+  columns: 1;
+  max-width: var(--measure);
+}
+
+@media (max-width: 34rem) {
+  .maplist {
+    columns: 1;
+  }
+}
+
+/* --- 뻗어나간 그림 ---------------------------------------------- */
+
+.graph {
+  overflow-x: auto;
+}
+
+/* 너비·높이를 속성으로 박아두고 CSS가 비율대로 늘린다.
+   높이를 고정하면 좁은 폭에서 위아래에 빈 띠가 생긴다 */
+.graph svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 34rem;
+}
+
+.graph .edge {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 1.25;
+}
+
+.graph .node {
+  fill: var(--rule);
+}
+
+.graph .node.src {
+  fill: var(--accent);
+}
+
+/* 실제로 따라가 읽은 것만 채운다 */
+.graph .node.dst {
+  fill: var(--bg);
+  stroke: var(--rule);
+  stroke-width: 1.25;
+}
+
+.graph .node.dst.read {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.graph text {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  dominant-baseline: middle;
+  fill: var(--muted);
+}
+
+.graph text.src {
+  fill: var(--text);
+  font-size: 12px;
+}
+
+.graph text.dst.read {
+  fill: var(--text);
+}
+
+.graph .mark {
+  fill: var(--accent);
+  font-size: 10px;
+}
+
+/* 그림이 안 보이는 폭에서는 같은 내용을 목록으로 */
+.sproutlist {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sproutlist li {
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--rule);
+}
+
+.sproutlist .from {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.sproutlist .to span {
+  display: block;
+  font-size: 0.86rem;
+  color: var(--muted);
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--rule);
+  margin-top: 0.2rem;
+}
+
+.sproutlist .to span.read {
+  color: var(--accent);
+}
+
+@media (max-width: 36rem) {
+  .graph {
+    display: none;
+  }
+  .sproutlist {
+    display: block;
+  }
+}
+
+/* --- 곁단 목차 — 넓은 화면에서만 -------------------------------- */
+
+/*
+ * 가운데 칸은 손대지 않는다. 본문 폭(--measure)과 --page 둘 다 그대로 두고,
+ * 좌우로 남는 여백에만 얹는다. 자리가 안 나오는 폭에서는 통째로 사라진다.
+ *
+ *   72rem = 1152px 일 때 왼쪽 끝이 0, 가운데 칸이 208px에서 시작한다.
+ *   곁단 폭 11rem(176px)이라 32px가 남는다. 이보다 좁으면 겹친다.
+ */
+.sideindex {
+  display: none;
+}
+
+@media (min-width: 72rem) {
+  .sideindex {
+    display: block;
+    position: fixed;
+    top: 8.5rem;
+    left: calc(50% - var(--page) / 2 - 13rem);
+    width: 11rem;
+    max-height: calc(100dvh - 12rem);
+    overflow-y: auto;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+
+  .sideindex ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--rule);
+  }
+
+  .sideindex li {
+    padding: 0.3rem 0 0.3rem 0.8rem;
+  }
+
+  /* 목록은 낱개 글보다 위에 오고, 사이에 한 칸을 둔다 */
+  .sideindex li.islist + li:not(.islist) {
+    margin-top: 0.6rem;
+  }
+
+  .sideindex a {
+    color: var(--muted);
+    transition: color 0.18s ease;
+  }
+
+  .sideindex a:hover {
+    color: var(--accent);
+  }
+
+  /* 지금 보고 있는 것 */
+  .sideindex a[aria-current="page"] {
+    color: var(--text);
+  }
+
+  .sideindex .all {
+    display: inline-block;
+    margin: 1rem 0 0 0.8rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+
+  .sideindex .all:hover {
+    color: var(--accent);
+  }
 }

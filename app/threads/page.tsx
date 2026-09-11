@@ -1,23 +1,7 @@
 import Link from "next/link";
-import { getByStrand, formatMonth } from "@/lib/content";
+import { getByStrand, STRAND_NAMES, formatMonth } from "@/lib/content";
 
 export const metadata = { title: "갈래 — Eunchan Joe" };
-
-/**
- * 「나」의 "지금 관심이 벌어져 있는 자리들"에 적힌 아홉 갈래를 그대로 쓴다.
- * 새 이름을 지어내지 않는다. 여기 순서대로 화면에 뜬다.
- */
-const STRANDS = [
-  "진단명 사이를 가로지르는 것",
-  "재는 일",
-  "개입",
-  "애착과 관계",
-  "뇌와 몸",
-  "먹는 일",
-  "제도 안에서의 판단",
-  "여러 집단",
-  "디지털 도구",
-];
 
 export default function ThreadsPage() {
   const byStrand = getByStrand();
@@ -35,7 +19,7 @@ export default function ThreadsPage() {
       </div>
 
       <div className="strands">
-        {STRANDS.map((name) => {
+        {STRAND_NAMES.map((name) => {
           const items = byStrand.get(name) ?? [];
           return (
             <section key={name} className="strand">

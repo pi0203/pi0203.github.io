@@ -299,6 +299,23 @@ const SECTION_KO: Record<Section, string> = {
 };
 
 /**
+ * 「나」의 "지금 관심이 벌어져 있는 자리들"에 적힌 아홉 갈래.
+ * 새 이름을 지어내지 않는다 — 여기 적힌 것만 쓰고, 순서도 그대로 따른다.
+ * 「갈래」 화면과 「지도」가 같은 목록을 봐야 해서 여기 둔다.
+ */
+export const STRAND_NAMES = [
+  "진단명 사이를 가로지르는 것",
+  "재는 일",
+  "개입",
+  "애착과 관계",
+  "뇌와 몸",
+  "먹는 일",
+  "제도 안에서의 판단",
+  "여러 집단",
+  "디지털 도구",
+] as const;
+
+/**
  * 다섯 섹션을 전부 훑어 갈래별로 모은다.
  * 갈래를 안 적은 항목은 어디에도 안 걸린다 — 억지로 다 채우지 않는다.
  */
@@ -342,6 +359,28 @@ export function getTitleMap(): Record<string, string> {
     }
   }
   out["/threads"] = "갈래";
+  return out;
+}
+
+/**
+ * 섹션마다 그 안에 무엇이 있는지. 곁단 목차가 쓴다.
+ *
+ * 위치 표시와 같은 이유로 빌드 때 만들어 넘긴다 — 곁단은 지금 주소를 봐야 하는데
+ * 제목은 마크다운에만 있다. 목록을 먼저, 낱개 글을 뒤에 둔다.
+ */
+export function getSectionIndex(): Record<string, { slug: string; title: string; list?: true }[]> {
+  const out: Record<string, { slug: string; title: string; list?: true }[]> = {};
+  for (const section of Object.keys(SECTION_KO) as Section[]) {
+    if (section === "me") continue; // 상세 페이지가 없어 오갈 곳이 없다
+    out[section] = [
+      ...getListSummaries(section).map((e) => ({
+        slug: e.slug,
+        title: e.title,
+        list: true as const,
+      })),
+      ...getEntries(section).map((e) => ({ slug: e.slug, title: e.title })),
+    ];
+  }
   return out;
 }
 
@@ -421,6 +460,56 @@ export function getNeighbors(dir: Section, slug: string): Neighbors {
   }
 
   return out;
+}
+
+/* ---------------------------------------------------------------
+   뻗어나간 관계 — 「읽고 싶은 책들」의 「어디서」 칸이 만든 그림.
+
+   이 사이트에서 유일하게 이미 그물로 되어 있는 자료다.
+   책 한 권이 다음 책 여럿을 불러온 자취라, 목록으로 보면 스물세 줄이지만
+   그려놓으면 어디가 크게 벌어졌는지가 한눈에 보인다.
+   --------------------------------------------------------------- */
+
+export type SproutGraph = {
+  /** 출발이 된 책. 나온 순서를 지킨다 */
+  sources: { title: string; slug?: string; fanout: number }[];
+  /** 거기서 나온 책. `from`이 출발점 제목 */
+  targets: { title: string; author?: string; from: string; read: boolean }[];
+};
+
+/**
+ * 「어디서」 칸을 읽어 출발점과 뻗어나간 책으로 가른다.
+ *
+ * 칸의 꼴은 `<책 제목>에서`이고 뒤에 ` · 읽음`이 붙기도 한다.
+ * 그 꼴이 아니면 그냥 건너뛴다 — 여기서도 예외를 던지지 않는다.
+ */
+export function getSproutGraph(dir: Section = "reading"): SproutGraph {
+  const edges: SproutGraph["targets"] = [];
+  const order: string[] = [];
+
+  for (const summary of getListSummaries(dir)) {
+    if (!summary.unread) continue;
+    for (const b of getList(dir, summary.slug)?.books ?? []) {
+      const m = /^(.+?)에서(?:\s*·\s*(읽음))?$/.exec(b.note ?? "");
+      if (!m) continue;
+      const from = m[1].trim();
+      if (!order.includes(from)) order.push(from);
+      edges.push({ title: b.title, author: b.author, from, read: Boolean(m[2]) });
+    }
+  }
+
+  // 출발점에 글이 있으면 이어준다. 지금은 아직 하나도 없다
+  const byTitle = new Map(getEntries(dir).map((e) => [normTitle(e.title), e.slug]));
+  const sources = order.map((title) => ({
+    title,
+    slug: byTitle.get(normTitle(title)),
+    fanout: edges.filter((e) => e.from === title).length,
+  }));
+
+  // 출발점끼리 묶어 둔다. 그래야 그릴 때 선이 서로 넘지 않는다
+  edges.sort((a, b) => order.indexOf(a.from) - order.indexOf(b.from));
+
+  return { sources, targets: edges };
 }
 
 /** 2026-09-09 -> 2026년 9월 */

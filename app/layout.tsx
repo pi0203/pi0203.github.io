@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Instrument_Serif, Noto_Sans_KR } from "next/font/google";
 import ThemeToggle from "@/components/theme-toggle";
 import Breadcrumb from "@/components/breadcrumb";
-import { getTitleMap } from "@/lib/content";
+import SideIndex from "@/components/side-index";
+import { getTitleMap, getSectionIndex } from "@/lib/content";
 import "./globals.css";
 
 const display = Instrument_Serif({
@@ -36,6 +37,7 @@ const NAV = [
   { href: "/watching", label: "Watching" },
   { href: "/writing", label: "Writing" },
   { href: "/threads", label: "Threads" },
+  { href: "/map", label: "Map" },
 ];
 
 /**
@@ -73,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </header>
 
+          <SideIndex index={getSectionIndex()} />
           <Breadcrumb titles={getTitleMap()} />
 
           <main className="page">{children}</main>

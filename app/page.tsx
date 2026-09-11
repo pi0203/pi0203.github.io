@@ -7,6 +7,7 @@ const GATEWAYS = [
   { href: "/watching", ko: "본 것", en: "Watching", desc: "재밌게 본 영화와 드라마" },
   { href: "/writing", ko: "글", en: "Writing", desc: "조금 길게 쓴 글" },
   { href: "/threads", ko: "갈래", en: "Threads", desc: "칸을 가로질러, 같은 관심사에 걸리는 것들" },
+  { href: "/map", ko: "지도", en: "Map", desc: "여기 있는 것을 한 장에 펼친 것" },
 ];
 
 export default function Home() {
