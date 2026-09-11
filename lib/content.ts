@@ -32,6 +32,11 @@ export type Entry = {
   /** "읽은 것"의 지은이 */
   author?: string;
   /**
+   * 이 목록의 책들은 아직 안 읽은 것인가 (`list: true`인 파일에만 뜻이 있다).
+   * "읽은 책이 몇 권인지"를 셀 때 이 목록은 빼야 한다.
+   */
+  unread?: boolean;
+  /**
    * 그때 적어둔 것을 옮긴 글인가.
    * 지금 쓴 글과 한 목록에 섞이면 현재 생각으로 읽히므로 화면에서 갈라준다.
    */
@@ -102,6 +107,7 @@ function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
       summary: data.summary ? String(data.summary) : undefined,
       link: data.link ? String(data.link) : undefined,
       author: data.author ? String(data.author) : undefined,
+      unread: data.unread === true,
       then: data.then === true,
       html: marked.parse(body, { async: false }) as string,
     }))
@@ -226,8 +232,8 @@ export function getList(dir: Section, slug: string): Archive | null {
  * 섹션 공용 주의문. `content/<섹션>/_notice.md`가 있으면 그 본문을 HTML로 돌려준다.
  * 목록 화면 세 곳에 같은 문구가 들어가므로 파일 하나로 두고 불러 쓴다.
  */
-export function getNotice(dir: Section): string | null {
-  const file = path.join(CONTENT_DIR, dir, "_notice.md");
+export function getNotice(dir: Section, name = "notice"): string | null {
+  const file = path.join(CONTENT_DIR, dir, `_${name}.md`);
   if (!fs.existsSync(file)) return null;
   const { body } = parseFile(file);
   if (!body.trim()) return null;

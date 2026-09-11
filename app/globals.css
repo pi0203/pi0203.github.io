@@ -842,3 +842,34 @@ a {
     grid-column: 1 / -1;
   }
 }
+
+/* --- 묶음 머리 — 목록과 낱개 글 사이를 가르는 자리 --------------- */
+
+.blockhead {
+  padding: 3.5rem 0 0.5rem;
+}
+
+.blockhead h2 {
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.6rem;
+}
+
+/* 이 줄이 "여기 있는 게 대표작이 아니다"를 말한다. 작지만 읽히게 둔다 */
+.blockhead p {
+  max-width: var(--measure);
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.blockhead p strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* 페이지 끝에 붙는 설명. 위쪽 여백을 벌려 본문과 떼어둔다 */
+.notice.endnote {
+  margin-top: 4rem;
+}
