@@ -6,9 +6,11 @@ import {
   getListSummaries,
   getList,
   getNotice,
+  getNeighbors,
   formatMonth,
 } from "@/lib/content";
 import ArchiveList from "@/components/archive-list";
+import Neighbors from "@/components/neighbors";
 
 export function generateStaticParams() {
   // 낱개 글과 목록이 같은 경로를 쓴다. 화면만 다르게 그린다.
@@ -83,6 +85,7 @@ export default async function ReadingDetail({
         <h1>{book.title}</h1>
       </header>
       <div className="prose" dangerouslySetInnerHTML={{ __html: book.html }} />
+      <Neighbors n={getNeighbors("reading", slug)} dir="reading" />
       <Link href="/reading" className="backlink">
         &larr; 읽은 것
       </Link>

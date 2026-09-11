@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Neighbors from "@/components/neighbors";
 import { notFound } from "next/navigation";
-import { getEntries, getEntry, formatDate } from "@/lib/content";
+import { getEntries, getEntry, getNeighbors, formatDate } from "@/lib/content";
 
 export function generateStaticParams() {
   return getEntries("writing").map((e) => ({ slug: e.slug }));
@@ -18,6 +19,7 @@ export default async function WritingDetail({ params }: { params: Promise<{ slug
         <h1>{post.title}</h1>
       </header>
       <div className="prose" dangerouslySetInnerHTML={{ __html: post.html }} />
+      <Neighbors n={getNeighbors("writing", slug)} dir="writing" />
       <Link href="/writing" className="backlink">
         &larr; 글
       </Link>

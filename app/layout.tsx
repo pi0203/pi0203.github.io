@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Instrument_Serif, Noto_Sans_KR } from "next/font/google";
 import ThemeToggle from "@/components/theme-toggle";
+import Breadcrumb from "@/components/breadcrumb";
+import { getTitleMap } from "@/lib/content";
 import "./globals.css";
 
 const display = Instrument_Serif({
@@ -70,6 +72,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ThemeToggle />
             </div>
           </header>
+
+          <Breadcrumb titles={getTitleMap()} />
 
           <main className="page">{children}</main>
 

@@ -325,6 +325,104 @@ export function getByStrand(): Map<string, StrandItem[]> {
   return out;
 }
 
+/**
+ * 주소 → 화면에 쓸 이름. 위치 표시(breadcrumb)가 쓴다.
+ *
+ * 위치 표시는 주소를 봐야 해서 브라우저 쪽에서 그려야 하는데, 한글 제목은
+ * 마크다운에만 있다. 그래서 빌드 때 표를 만들어 넘긴다.
+ * 낱개 글과 목록을 다 합쳐도 수십 개라 통째로 보내도 된다.
+ */
+export function getTitleMap(): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const section of Object.keys(SECTION_KO) as Section[]) {
+    out[`/${section}`] = SECTION_KO[section];
+    if (section === "me") continue; // 상세 페이지가 없다
+    for (const e of [...getEntries(section), ...getListSummaries(section)]) {
+      out[`/${section}/${e.slug}`] = e.title;
+    }
+  }
+  out["/threads"] = "갈래";
+  return out;
+}
+
+/* ---------------------------------------------------------------
+   이웃 — 글 하나를 다 읽고 나서 갈 수 있는 곳.
+   지금까지는 「← 읽은 것」 하나뿐이라 글 끝이 막다른 길이었다.
+   세 방향을 만든다. 셋 다 이미 있는 자료에서만 나온다 — 새로 지어내지 않는다.
+   --------------------------------------------------------------- */
+
+/** 제목 비교용. 띄어쓰기와 가운뎃점 차이로 어긋나는 걸 막는다 */
+function normTitle(s: string): string {
+  return s.replace(/\s+/g, "").replace(/[·・]/g, "");
+}
+
+export type Neighbors = {
+  /** 목록에서 이 책 앞뒤에 적힌 책들. 적힌 순서가 곧 읽은 순서다 */
+  around: ArchiveBook[];
+  /** 그 목록의 이름과 주소 */
+  aroundFrom?: { title: string; slug: string };
+  /**
+   * 같은 갈래에 걸린 다른 항목들. 갈래마다 나누지 않고 항목으로 묶는다 —
+   * 갈래 둘을 함께 쓰는 글은 나누면 같은 줄이 두 번 나온다.
+   * `via`가 무엇을 함께 쓰는지를 들고 있다.
+   */
+  strands: { item: StrandItem; via: string[] }[];
+  /** 「읽고 싶은 책들」에서 이 책을 출발점으로 적어둔 것들 */
+  sprouted: ArchiveBook[];
+};
+
+/**
+ * 낱개 글 하나에 붙일 이웃 세 갈래.
+ *
+ * 이 함수도 예외를 던지지 않는다. 자료가 없으면 빈 배열이 나오고,
+ * 화면은 있는 것만 그린다.
+ */
+export function getNeighbors(dir: Section, slug: string): Neighbors {
+  const out: Neighbors = { around: [], strands: [], sprouted: [] };
+  const entry = getEntries(dir).find((e) => e.slug === slug);
+  if (!entry) return out;
+  const key = normTitle(entry.title);
+
+  // (1) 같은 시기에 읽은 책 — 아직 안 읽은 목록에서는 찾지 않는다
+  for (const summary of getListSummaries(dir)) {
+    if (summary.unread) continue;
+    const list = getList(dir, summary.slug);
+    const at = list?.books.findIndex((b) => normTitle(b.title) === key) ?? -1;
+    if (!list || at < 0) continue;
+    out.around = list.books.slice(Math.max(0, at - 3), at + 4).filter((b) => b.order !== at);
+    out.aroundFrom = { title: list.title, slug: summary.slug };
+    break;
+  }
+
+  // (2) 같은 갈래 — 자기 자신은 빼고, 같은 항목은 한 줄로 합친다
+  const byStrand = getByStrand();
+  const seen = new Map<string, { item: StrandItem; via: string[] }>();
+  for (const name of entry.strands ?? []) {
+    for (const item of byStrand.get(name) ?? []) {
+      if (item.section === dir && item.href === `/${dir}/${slug}/`) continue;
+      const id = `${item.section}/${item.title}`;
+      const hit = seen.get(id);
+      if (hit) hit.via.push(name);
+      else seen.set(id, { item, via: [name] });
+    }
+  }
+  // 함께 쓰는 갈래가 많은 것부터. 더 가까운 이웃이다
+  out.strands = [...seen.values()].sort((a, b) => b.via.length - a.via.length);
+
+  // (3) 여기서 뻗어나간 책 — 「어디서」 칸이 "<이 책>에서"로 시작하는 행.
+  //     뒤에 " · 읽음"이 붙기도 하므로 앞부분만 본다.
+  for (const summary of getListSummaries(dir)) {
+    if (!summary.unread) continue;
+    const list = getList(dir, summary.slug);
+    if (!list) continue;
+    out.sprouted.push(
+      ...list.books.filter((b) => normTitle(b.note ?? "").startsWith(`${key}에서`)),
+    );
+  }
+
+  return out;
+}
+
 /** 2026-09-09 -> 2026년 9월 */
 export function formatMonth(date: string): string {
   const [y, m] = date.split("-");

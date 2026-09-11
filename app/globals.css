@@ -1017,3 +1017,127 @@ a {
     transform: rotate(-90deg);
   }
 }
+
+/* --- 글 끝의 갈림길 — 여기서 어디로 갈 수 있는가 ----------------- */
+
+.neighbors {
+  margin-top: 4.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--rule);
+}
+
+.neighbors section + section {
+  margin-top: 2.4rem;
+}
+
+.neighbors h2 {
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  margin: 0 0 0.55rem;
+}
+
+/* 갈래 이름은 본문 색으로 — 이게 묶는 이유라서 */
+.neighbors h2 .name {
+  color: var(--text);
+  margin-left: 0.3rem;
+}
+
+/* 왜 이 책들이 여기 묶여 있는지. 안 적으면 추천처럼 읽힌다 */
+.neighbors .why {
+  max-width: var(--measure);
+  margin: 0 0 0.8rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.neighbors .why a {
+  color: inherit;
+}
+
+.neighbors ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.neighbors li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--rule);
+  font-size: 0.94rem;
+}
+
+.neighbors li a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.neighbors li a:hover {
+  border-bottom-color: currentColor;
+}
+
+/* 글이 아직 없는 책. 링크가 아니라 흐리게 둔다 */
+.neighbors li .t {
+  color: var(--text);
+}
+
+.neighbors li .by {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* 걸려 있는 갈래 이름. 이게 이웃인 이유라서 오른쪽으로 밀어둔다 */
+.neighbors li .via {
+  margin-left: auto;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* 뻗어나가서 실제로 읽은 것 */
+.neighbors li .done {
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+}
+
+/* --- 위치 표시 — 검색으로 바로 떨어진 사람을 위해 ---------------- */
+
+.crumbs {
+  width: 100%;
+  max-width: var(--page);
+  margin: -2.75rem auto 2.25rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.crumbs a {
+  color: inherit;
+  border-bottom: 1px solid transparent;
+}
+
+.crumbs a:hover {
+  color: var(--accent);
+  border-bottom-color: currentColor;
+}
+
+.crumbs .here {
+  color: var(--text);
+  /* 제목이 길면 한 줄로 자른다. 위치 표시가 두 줄이 되면 머리가 무거워진다 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

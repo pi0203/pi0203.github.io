@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Neighbors from "@/components/neighbors";
 import { notFound } from "next/navigation";
-import { getEntries, getEntry, formatMonth } from "@/lib/content";
+import { getEntries, getEntry, getNeighbors, formatMonth } from "@/lib/content";
 
 export function generateStaticParams() {
   return getEntries("work").map((e) => ({ slug: e.slug }));
@@ -25,6 +26,7 @@ export default async function WorkDetail({ params }: { params: Promise<{ slug: s
           </a>
         </p>
       )}
+      <Neighbors n={getNeighbors("work", slug)} dir="work" />
       <Link href="/work" className="backlink">
         &larr; 만든 것
       </Link>
