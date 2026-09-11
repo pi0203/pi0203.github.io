@@ -143,6 +143,18 @@ export function isListSlug(dir: Section, slug: string): boolean {
   return readDir(dir, { lists: true }).some((e) => e.slug === slug);
 }
 
+/**
+ * 두 때를 가진 글만. `read`(책을 읽은 때)가 `date`(글을 쓴 날)와 다른 것들이다.
+ * 이 사이트가 검색으로 대신할 수 없는 자리라서 따로 꺼낸다 —
+ * 책 정보가 아니라 한 권이 한 사람에게서 어떻게 달라졌는가.
+ * 오래된 쪽부터. 「그때」가 먼저 오는 게 읽는 순서다.
+ */
+export function getTwice(dir: Section): Entry[] {
+  return getEntries(dir)
+    .filter((e) => e.read && e.read.slice(0, 4) !== e.date.slice(0, 4))
+    .sort((a, b) => (a.read ?? "").localeCompare(b.read ?? ""));
+}
+
 /* ---------------------------------------------------------------
    목록(archive) — 본문 없이 제목만 쌓이는 책들.
    낱개 글과 달리 파일 하나에 표로 들어간다.

@@ -23,12 +23,17 @@ export const metadata: Metadata = {
   description: "조은찬의 개인 홈페이지. 나에 대한 기록, 만든 것, 글.",
 };
 
+/*
+ * 다섯 칸은 매체로 나뉜 것이고 「갈래」는 그걸 가로지른다.
+ * 지금까지 어디에서도 링크가 없어서 홈에서만 닿을 수 있었다.
+ */
 const NAV = [
   { href: "/me", label: "Me" },
   { href: "/work", label: "Work" },
   { href: "/reading", label: "Reading" },
   { href: "/watching", label: "Watching" },
   { href: "/writing", label: "Writing" },
+  { href: "/threads", label: "Threads" },
 ];
 
 /**

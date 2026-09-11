@@ -193,6 +193,19 @@ a {
   margin-top: 1.3rem;
 }
 
+/* 마지막 한 문단만 선을 그어 떼어둔다 — 소개가 아니라 이 사이트가 하는 일이라서 */
+.hero .point {
+  margin-top: 2.2rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.98rem;
+}
+
+.hero .point strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
 /* 홈의 세 입구 */
 .gateways {
   border-top: 1px solid var(--rule);
@@ -909,4 +922,98 @@ a {
 /* 글은 없지만 한 줄이 붙은 행 — 링크는 아니라 밑줄을 긋지 않는다 */
 .book.has-line .t {
   color: var(--text);
+}
+
+/* --- 같은 책, 두 때 — 이 사이트가 검색으로 대신되지 않는 자리 ----- */
+
+.twice {
+  margin-bottom: 0.5rem;
+}
+
+/* 두 해가 왼쪽에 세로로 서고, 책이 오른쪽에 온다 */
+.span {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  padding: 1.1rem 0;
+  border-top: 1px solid var(--rule);
+  text-decoration: none;
+  color: inherit;
+}
+
+.span:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.span .years {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+  width: 3.4rem;
+  padding-top: 0.1rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.span .y-then {
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.span .y-arrow {
+  font-size: 0.7rem;
+  color: var(--rule);
+  margin: 0.05rem 0;
+}
+
+.span .y-now {
+  font-size: 0.86rem;
+  color: var(--accent);
+}
+
+.span .what {
+  display: block;
+  min-width: 0;
+}
+
+.span .t {
+  display: block;
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.span:hover .t {
+  color: var(--accent);
+}
+
+.span .s {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  max-width: var(--measure);
+}
+
+/* 좁은 화면에서는 두 해를 가로로 눕힌다. 세로로 두면 왼쪽이 허전하다 */
+@media (max-width: 30rem) {
+  .span {
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .span .years {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.35rem;
+    width: auto;
+    padding-top: 0;
+  }
+
+  /* 같은 글자를 눕혀 쓴다 — ↓ 를 돌리면 → 가 된다 */
+  .span .y-arrow {
+    margin: 0;
+    transform: rotate(-90deg);
+  }
 }
