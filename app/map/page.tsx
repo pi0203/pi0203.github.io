@@ -7,9 +7,11 @@ import {
   STRAND_NAMES,
   getTwice,
   getSproutGraph,
+  getCorpus,
   formatMonth,
 } from "@/lib/content";
 import SproutGraph, { SproutList } from "@/components/sprout-graph";
+import CorpusGrid from "@/components/corpus-grid";
 
 export const metadata = { title: "지도 — Eunchan Joe" };
 
@@ -23,6 +25,7 @@ const SECTIONS = [
 
 export default function MapPage() {
   const graph = getSproutGraph();
+  const corpus = getCorpus();
   const strands = getByStrand();
   const twice = getTwice("reading");
 
@@ -124,7 +127,50 @@ export default function MapPage() {
         </section>
       )}
 
-      {/* 4. 뻗어나간 그림 — 이 사이트에서 유일하게 이미 그물인 자료 */}
+      {/*
+        * 4. 전권을 한 장에.
+        *
+        * ⚠ 점 217개를 깔면 그대로 권수 자랑이 될 수 있다. 그래서 세는 방향을 뒤집는다 —
+        * 읽은 양이 아니라 **아직 안 꺼낸 양**을 보여주는 그림으로 쓴다.
+        */}
+      <section className="mapblock">
+        <h2>
+          읽은 것 전부
+          <span className="desc">점 하나가 한 권 · 적힌 순서대로</span>
+        </h2>
+        <p className="mapnote">
+          {(() => {
+            const all = corpus.reduce((n, b) => n + b.books.length, 0);
+            const marked = corpus.reduce(
+              (n, b) => n + b.books.filter((x) => x.slug || x.sprouts || x.lined).length,
+              0,
+            );
+            return (
+              <>
+                세 목록에 {all}권이 있습니다. <strong>진한 점은 무언가 적힌 책</strong>입니다 —
+                글이 붙었거나, 여기서 다른 책이 뻗어나갔거나, 지금 와서 한 줄이 달린 것.
+                지금은 {marked}권입니다. <strong>나머지는 읽고 지나갔습니다.</strong>
+              </>
+            );
+          })()}
+        </p>
+        <CorpusGrid bands={corpus} />
+        <p className="legend">
+          <span className="k wrote" /> 글이 있는 책
+          <span className="k sprout" /> 여기서 뻗어나간 책이 있음
+          <span className="k again" /> 두 때에 읽은 책
+          {/* 넷째 칸이 붙은 책이 실제로 보일 때만. 없는 표시를 설명하지 않는다 */}
+          {corpus.some((b) => b.books.some((x) => x.lined && !x.slug && !x.sprouts)) && (
+            <>
+              <span className="k lined" /> 지금 와서 한 줄이 붙음
+            </>
+          )}
+          <span className="k plain" /> 그 밖에
+          <em>이름은 점에 마우스를 올리면 뜹니다.</em>
+        </p>
+      </section>
+
+      {/* 5. 뻗어나간 그림 — 이 사이트에서 유일하게 이미 그물인 자료 */}
       <section className="mapblock">
         <h2>
           <Link href="/reading/to-read/">뻗어나간 자리</Link>
