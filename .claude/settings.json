@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"맥락 로딩 규칙 — 모든 맥락 문서를 자동으로 읽지 않는다. 먼저 CONTEXT_INDEX.md를 읽고, 지금 요청을 하는 데 필요한 docs/context/ 파일만 골라 읽는다. 이어받는 작업이면 HANDOFF.md를 본다. 세션을 끝낼 때 HANDOFF.md를 갱신하고, 원칙으로 굳은 것은 docs/context/로 옮긴다.\"}}'"
+          }
+        ]
+      }
+    ]
+  }
+}
