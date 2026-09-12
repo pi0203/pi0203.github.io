@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Instrument_Serif, Noto_Sans_KR } from "next/font/google";
+import {
+  Instrument_Serif,
+  Noto_Sans_KR,
+  Noto_Serif_KR,
+  Nanum_Pen_Script,
+} from "next/font/google";
 import ThemeToggle from "@/components/theme-toggle";
 import Breadcrumb from "@/components/breadcrumb";
 import SideIndex from "@/components/side-index";
@@ -16,9 +21,34 @@ const display = Instrument_Serif({
 });
 
 const body = Noto_Sans_KR({
-  weight: ["300", "400", "500"],
+  weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
   variable: "--font-body",
+  display: "swap",
+});
+
+/*
+ * 목소리 셋. 서체가 바뀌는 것이 곧 **지금 누가 말하고 있는가**의 표시다.
+ *
+ *   --font-body    사이트가 말한다 — UI·설명·목록·조사 결과
+ *   --font-read    글이 말한다   — 제목·질문·장면을 여는 문장
+ *   --font-hand    사람이 말한다 — 조은찬 본인이 그때 직접 쓴 문장
+ *   --font-display 숫자와 라틴   — 217, 25 같은 수를 다른 질감으로
+ *
+ * 손글씨는 **출처가 붙은 짧은 문장에만** 쓴다. 한 화면에 한 번, 1.6rem 이상.
+ * 작게 쓰면 못 읽고, 많이 쓰면 감성 문구 사이트가 된다.
+ */
+const read = Noto_Serif_KR({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-read",
+  display: "swap",
+});
+
+const hand = Nanum_Pen_Script({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-hand",
   display: "swap",
 });
 
@@ -58,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
       </head>
-      <body className={`${display.variable} ${body.variable}`}>
+      <body className={`${display.variable} ${body.variable} ${read.variable} ${hand.variable}`}>
         <div className="shell">
           <header className="masthead">
             <Link href="/" className="wordmark">

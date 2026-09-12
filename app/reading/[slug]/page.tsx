@@ -7,6 +7,7 @@ import {
   getList,
   getNotice,
   getNeighbors,
+  splitScenes,
   formatMonth,
 } from "@/lib/content";
 import ArchiveList from "@/components/archive-list";
@@ -65,26 +66,52 @@ export default async function ReadingDetail({
   const book = getEntry("reading", slug);
   if (!book) notFound();
 
+  const scenes = splitScenes(book.html);
+  const when = book.read ? (
+    <>
+      {book.read}년에 읽고 &middot; {formatMonth(book.date)}에 적음
+    </>
+  ) : (
+    formatMonth(book.date)
+  );
+
   return (
     <article className="article">
-      <header>
-        <div className="meta">
-          {book.author && <>{book.author} &middot; </>}
-          {/* 읽은 때가 따로 있으면 두 때를 같이 — 한 책이 두 때를 갖는다 */}
-          {book.read ? (
-            <>
-              {book.read}년에 읽고 &middot; {formatMonth(book.date)}에 적음
-            </>
-          ) : (
-            formatMonth(book.date)
-          )}
-        </div>
-        {book.then && (
-          <p className="then">{book.date.slice(0, 4)}년에 적어둔 것을 옮겼습니다.</p>
-        )}
-        <h1>{book.title}</h1>
-      </header>
-      <div className="prose" dangerouslySetInnerHTML={{ __html: book.html }} />
+      {/*
+       * 여는 장면 — 본인이 고른 한 문장만. 메타는 그 아래 작게.
+       * 캘리그래피가 하는 일 그대로다: 한 문장 · 큰 여백 · 작은 출처.
+       * `pull`이 없으면 이 장면을 아예 그리지 않는다.
+       */}
+      {book.pull ? (
+        <section className="opening">
+          <p className="said">{book.pull}</p>
+          <p className="from">
+            {book.title}
+            {book.author && <> &middot; {book.author}</>} &middot; {when}
+          </p>
+        </section>
+      ) : (
+        <header>
+          <div className="meta">
+            {book.author && <>{book.author} &middot; </>}
+            {when}
+          </div>
+          <h1>{book.title}</h1>
+        </header>
+      )}
+
+      {book.then && (
+        <p className="then">{book.date.slice(0, 4)}년에 적어둔 것을 옮겼습니다.</p>
+      )}
+
+      {/* 층마다 목소리가 다르다 — 그때 쓴 글과 나중에 붙인 조사가 같게 읽히면 안 된다 */}
+      {scenes.map((sc) => (
+        <section key={sc.id} className={`scene v-${sc.voice}`} id={sc.id}>
+          {sc.title && <h2>{sc.title}</h2>}
+          <div className="prose" dangerouslySetInnerHTML={{ __html: sc.html }} />
+        </section>
+      ))}
+
       <Neighbors n={getNeighbors("reading", slug)} dir="reading" />
       <Link href="/reading" className="backlink">
         &larr; 읽은 것

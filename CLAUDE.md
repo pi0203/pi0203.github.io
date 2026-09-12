@@ -19,6 +19,8 @@ Next.js 정적 내보내기 → GitHub Pages와 Vercel 양쪽에 자동 배포.
 - **시간순으로 구조를 만들지 않는다.** 연도는 맥락을 확인하는 근거이지 뼈대가 아니다.
   서로 다른 시기의 기록이 **어떤 문제를 중심으로 다시 만나는지**를 보여준다
 - **카테고리는 서랍이 아니라 경로다.** 다음으로 갈 곳이 없으면 그 화면은 덜 된 것이다
+- **기능은 줄이지 않는다. 문법을 정교하게 한다.** 신호를 더하면 범례도 더한다.
+  진한 색은 본인 기록, 연한 색은 Claude가 놓은 것 — 이 규칙이 화면 전체를 설명한다
 
 새 화면·기능·시각화를 제안하기 전에 `docs/context/site-purpose.md`의
 「어떻게 조직하는가 — 편년체가 아니라 기전체」를 읽는다.
@@ -107,3 +109,13 @@ git push        # GitHub Pages(약 60초) + Vercel(약 10초) 자동 배포
 
 `out/`, `.vercel`, `.env*`, `_원본자료/`, `HANDOFF.md`는 커밋하지 않는다.
 자세한 것은 `docs/context/build-and-deploy.md`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

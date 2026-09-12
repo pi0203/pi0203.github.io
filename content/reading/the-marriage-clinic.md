@@ -3,7 +3,7 @@ title: 결혼클리닉
 author: John Gottman
 date: 2026-05-10
 summary: 사랑의 지도라는 개념을 만나고, 파트너 반응성을 내 말로 옮겨본 기록
-strand: 애착과 관계
+strand: 사람은 서로에게 무엇인가
 ---
 
 ## 읽으면서

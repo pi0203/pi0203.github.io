@@ -3,7 +3,7 @@ title: 넥서스
 author: 유발 하라리
 date: 2026-09-10
 summary: 정보가 늘어나는 것과 현명해지는 것은 별개라는 생각
-strand: 애착과 관계
+strand: AI와 사람 사이
 ---
 
 읽는 중이다.

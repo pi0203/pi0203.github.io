@@ -32,6 +32,12 @@ export type Entry = {
   /** "읽은 것"의 지은이 */
   author?: string;
   /**
+   * 화면을 여는 한 문장. **본인이 직접 고른다.**
+   * 본문에서 자동으로 뽑지 않는다 — 엉뚱한 문장이 걸린다.
+   * 없으면 여는 장면을 그리지 않는다. 억지로 채우지 않는 규칙 그대로.
+   */
+  pull?: string;
+  /**
    * 처음 읽은 때. `date`는 **이 글을 쓴 날**이고 이쪽은 **책을 읽은 때**다.
    * 둘이 다르면 그 글은 다시 본 책이다 — 그때와 지금, 두 층을 담는다.
    * 연도만("2020") 적어도 되므로 `toISODate()`를 거치지 않는다.
@@ -168,6 +174,7 @@ function readDir(dir: Section, opts: { lists: boolean }): Entry[] {
       summary: data.summary ? String(data.summary) : undefined,
       link: data.link ? String(data.link) : undefined,
       author: data.author ? String(data.author) : undefined,
+      pull: data.pull ? String(data.pull) : undefined,
       read: data.read ? String(data.read) : undefined,
       unread: data.unread === true,
       then: data.then === true,
@@ -502,6 +509,13 @@ export type Neighbors = {
   strands: { item: StrandItem; via: string[] }[];
   /** 「읽고 싶은 책들」에서 이 책을 출발점으로 적어둔 것들 */
   sprouted: ArchiveBook[];
+  /**
+   * 이 책이 걸린 자리와 그 자리의 다른 책들.
+   *
+   * 갈래(`strand:`)는 파일이 있는 항목에만 붙어서 낱개 글끼리만 이어졌다.
+   * 자리는 목록의 책도 걸리므로 **여기서 책 수백 권이 서로의 이웃이 된다.**
+   */
+  places: { name: string; layer: Place["layer"]; books: PlaceBook[] }[];
 };
 
 /**
@@ -511,7 +525,7 @@ export type Neighbors = {
  * 화면은 있는 것만 그린다.
  */
 export function getNeighbors(dir: Section, slug: string): Neighbors {
-  const out: Neighbors = { around: [], strands: [], sprouted: [] };
+  const out: Neighbors = { around: [], strands: [], sprouted: [], places: [] };
   const entry = getEntries(dir).find((e) => e.slug === slug);
   if (!entry) return out;
   const key = normTitle(entry.title);
@@ -541,6 +555,21 @@ export function getNeighbors(dir: Section, slug: string): Neighbors {
   }
   // 함께 쓰는 갈래가 많은 것부터. 더 가까운 이웃이다
   out.strands = [...seen.values()].sort((a, b) => b.via.length - a.via.length);
+
+  // (2-b) 같은 자리에 있는 책 — 목록의 책도 걸리므로 이웃이 확 넓어진다.
+  //       자리마다 너무 길어지지 않게 앞의 몇 권만 보이고, 나머지는 자리로 보낸다.
+  for (const place of getPlaces(dir).places) {
+    // 목록의 책으로 걸렸거나, 앞머리 `strand:`로 걸렸거나.
+    // 「넥서스」처럼 목록에 없고 글만 있는 것은 뒤쪽으로만 걸린다.
+    const byBook = place.books.some((b) => normTitle(b.title) === key);
+    const byStrand = (entry.strands ?? []).includes(place.name);
+    if (!byBook && !byStrand) continue;
+    out.places.push({
+      name: place.name,
+      layer: place.layer,
+      books: place.books.filter((b) => normTitle(b.title) !== key),
+    });
+  }
 
   // (3) 여기서 뻗어나간 책 — 「어디서」 칸이 "<이 책>에서"로 시작하는 행.
   //     뒤에 " · 읽음"이 붙기도 하므로 앞부분만 본다.
@@ -680,6 +709,406 @@ export function getCorpus(dir: Section = "reading"): CorpusBand[] {
   return bands.sort(
     (a, b) => Number(a.unread) - Number(b.unread) || b.books.length - a.books.length,
   );
+}
+
+/* ---------------------------------------------------------------
+   자리 — 책들이 주제로 다시 만나는 곳.
+
+   갈래(`strand:`)는 파일이 있는 항목에만 붙는다. 목록의 책 166권은 표의
+   행이라 붙을 데가 없었고, 그래서 갈래 아홉 칸 중 다섯이 비어 있었다.
+   자리는 `content/reading/_places.md` 한 파일에 적고, 책과는 제목으로
+   이어붙인다 — 목록 행이 같은 제목의 글로 이어지는 것과 같은 장치다.
+
+   시간은 자리의 속성이지 뼈대가 아니다. 자리를 연도로 늘어놓지 않는다.
+   --------------------------------------------------------------- */
+
+/** 자리 하나에 걸린 책 */
+export type PlaceBook = {
+  title: string;
+  /** 낱개 글이 있으면 그 주소 */
+  slug?: string;
+  /**
+   * 왜 이 자리에 걸리는가. 표의 둘째 칸에 적는다.
+   * **본인 기록으로 이미 명백한 책에는 안 적는다** — 조사로 이은 것에만 붙이고,
+   * 그때는 출처를 함께 적는다. 근거 없이 이으면 안 되므로 이 칸이 곧 조건이다.
+   */
+  why?: string;
+  /** 아직 안 읽은 책인가. 목록의 `unread`에서 끌어온다 — 따로 적지 않는다 */
+  unread?: boolean;
+  /** 이 책이 함께 걸린 다른 자리들. 비어 있지 않으면 그게 곧 그물의 다리다 */
+  also: string[];
+  /**
+   * 어느 책에서 뻗어나온 책인가 (`to-read.md`의 「어디서」 칸).
+   * 그 출처 책이 다른 자리에 있으면 **뻗어나감이 자리와 자리를 잇는다** —
+   * 같은 책을 나눠 쓰는 것과는 다른 종류의 이어짐이다.
+   */
+  from?: { title: string; places: string[] };
+};
+
+export type Place = {
+  name: string;
+  /** 적어둔 = 본인 기록이 만든 자리, 이어질 수 있는 = 나란히 놓아본 자리 */
+  layer: "written" | "possible";
+  /** 「그때 두꺼웠던」 / 「그때와 지금에 걸친」 / 「지금 열려 있는」 */
+  when?: "then" | "both" | "now";
+  /** 근거. 첫 문단을 HTML로 */
+  why?: string;
+  /** 「그때 못 보고 지나친 것」. 인용 블록을 HTML로 */
+  missed?: string;
+  books: PlaceBook[];
+  /**
+   * 이 자리가 다른 자리와 이어진 것들 중 **글이 붙은 것**.
+   * 화면 위쪽에 한 번 모아 보여주는 것만으로는 묻힌다 — 자리 칸 안에서도 읽혀야
+   * 그 선이 무슨 뜻인지 그 자리에서 알 수 있다.
+   */
+  told: PlaceBridge[];
+  /**
+   * 앞머리 `strand:`로 이 자리에 걸린 낱개 항목들. 책 말고 만든 것·글·본 것도 온다.
+   * 책은 목록의 행이라 파일이 없고, 항목은 파일이 있다 — 자리에서 둘이 만난다.
+   */
+  items: StrandItem[];
+};
+
+/** 두 자리가 책을 공유할 때 그 겹침에 붙는 글 */
+export type PlaceBridge = {
+  a: string;
+  b: string;
+  /** 같은 책을 나눠 쓰는 것 */
+  shared: string[];
+  /** 한쪽 자리의 책에서 다른 쪽 자리의 책으로 뻗어나간 것 */
+  sprouted: { from: string; to: string }[];
+  /** 왜 겹치는지. 없으면 선만 그린다 */
+  note?: string;
+};
+
+const WHEN_MARK: [string, Place["when"]][] = [
+  ["그때와 지금에 걸친 자리", "both"],
+  ["그때 두꺼웠던 자리", "then"],
+  ["지금 열려 있는 자리", "now"],
+];
+
+/**
+ * `_places.md`를 읽는다.
+ *
+ * `getList()`와 같은 규칙으로 손수 줄을 훑는다 — 어떤 입력에도 예외를 던지지
+ * 않는다. 손으로 채우는 파일이라 오타 하나로 배포가 멈추면 안 된다.
+ * 제목이 목록과 안 맞으면 그 책은 조용히 slug 없이 남는다.
+ */
+export function getPlaces(dir: Section = "reading"): {
+  places: Place[];
+  bridges: PlaceBridge[];
+} {
+  const file = path.join(CONTENT_DIR, dir, "_places.md");
+  if (!fs.existsSync(file)) return { places: [], bridges: [] };
+  const { body } = parseFile(file);
+
+  const places: Place[] = [];
+  const notes = new Map<string, string[]>(); // "a∩b" -> 문단들
+  let layer: Place["layer"] | null = null;
+  let inBridges = false;
+  let cur: Place | null = null;
+  let curBridge: string | null = null;
+  let prose: string[] = [];
+  let quote: string[] = [];
+
+  const flush = () => {
+    if (cur) {
+      const text = prose.join("\n").trim();
+      if (text) {
+        for (const [mark, when] of WHEN_MARK) {
+          if (text.includes(mark)) {
+            cur.when = when;
+            break;
+          }
+        }
+        cur.why = marked.parse(text, { async: false }) as string;
+      }
+      if (quote.length) {
+        cur.missed = marked.parse(quote.join("\n"), { async: false }) as string;
+      }
+    } else if (curBridge) {
+      const text = prose.join("\n").trim();
+      if (text) notes.set(curBridge, [text]);
+    }
+    prose = [];
+    quote = [];
+  };
+
+  for (const raw of body.split("\n")) {
+    const line = raw.trimEnd();
+
+    if (line.startsWith("# ")) {
+      flush();
+      cur = null;
+      curBridge = null;
+      const head = line.slice(2).trim();
+      inBridges = head.includes("겹치는");
+      layer = inBridges ? null : head.includes("이어질") ? "possible" : "written";
+      continue;
+    }
+
+    if (line.startsWith("## ")) {
+      flush();
+      const head = line.slice(3).trim();
+      if (inBridges) {
+        cur = null;
+        curBridge = head;
+      } else if (layer) {
+        curBridge = null;
+        cur = { name: head, layer, books: [], items: [], told: [] };
+        places.push(cur);
+      }
+      continue;
+    }
+
+    if (line.includes("|")) {
+      if (!cur) continue;
+      const cells = line
+        .replace(/^\s*\|/, "")
+        .replace(/\|\s*$/, "")
+        .split("|")
+        .map((c) => c.trim());
+      if (isSeparatorRow(cells)) continue;
+      if (HEADER_CELLS.has(cells[0])) continue;
+      if (!cells[0]) continue;
+      // 둘째 칸은 왜 이 자리에 걸리는지. 비어 있어도 된다
+      cur.books.push({ title: cells[0], why: cells[1] || undefined, also: [] });
+      continue;
+    }
+
+    if (line.startsWith(">")) {
+      quote.push(line.replace(/^>\s?/, ""));
+      continue;
+    }
+    prose.push(line);
+  }
+  flush();
+
+  // 책 제목 -> 낱개 글. 목록이 부르는 이름과 자리가 부르는 이름이 다를 수 있어
+  // getCorpus()와 같은 별칭 규칙(괄호·쉼표·콜론 앞에서 끊기)을 함께 쓴다.
+  const keys = (title: string) => {
+    const full = normTitle(title);
+    const short = normTitle(title.split(/[(,:—–-]/)[0]);
+    return short && short !== full ? [full, short] : [full];
+  };
+  const byTitle = new Map<string, string>();
+  for (const e of getEntries(dir)) {
+    for (const k of keys(e.title)) byTitle.set(k, e.slug);
+  }
+  // 안 읽은 책인지는 목록에서 끌어온다. 자리 파일에 따로 적지 않는다 —
+  // 같은 사실을 두 군데 적으면 한쪽만 고쳐질 때가 온다.
+  const unread = new Set<string>();
+  for (const summary of getListSummaries(dir)) {
+    if (!summary.unread) continue;
+    for (const b of getList(dir, summary.slug)?.books ?? []) {
+      for (const k of keys(b.title)) unread.add(k);
+    }
+  }
+
+  for (const p of places) {
+    for (const b of p.books) {
+      const ks = keys(b.title);
+      b.slug = ks.map((k) => byTitle.get(k)).find(Boolean);
+      b.unread = ks.some((k) => unread.has(k));
+    }
+  }
+
+  // 앞머리 `strand:`로 걸린 낱개 항목을 같은 자리에 합친다.
+  // 자리 이름과 정확히 같은 것만 붙는다 — 오타는 조용히 빠진다.
+  const byStrand = getByStrand();
+  for (const p of places) p.items = byStrand.get(p.name) ?? [];
+
+  // 겹침 — 같은 책을 쓰는 자리끼리 잇는다. 이게 그물의 다리다.
+  const where = new Map<string, string[]>();
+  for (const p of places) {
+    for (const b of p.books) {
+      const k = normTitle(b.title);
+      where.set(k, [...(where.get(k) ?? []), p.name]);
+    }
+  }
+  for (const p of places) {
+    for (const b of p.books) {
+      b.also = (where.get(normTitle(b.title)) ?? []).filter((n) => n !== p.name);
+    }
+  }
+
+  // 뻗어나감 — 「어디서」 칸이 기록한 책→책. 출처 책이 사는 자리를 찾아 붙인다.
+  const sprouts = new Map<string, string>();
+  for (const t of getSproutGraph(dir).targets) {
+    for (const k of keys(t.title)) sprouts.set(k, t.from);
+  }
+  const placesOf = (title: string) =>
+    places.filter((p) => p.books.some((b) => keys(b.title).includes(normTitle(title))))
+      .map((p) => p.name);
+  for (const p of places) {
+    for (const b of p.books) {
+      const src = keys(b.title).map((k) => sprouts.get(k)).find(Boolean);
+      if (!src) continue;
+      const homes = placesOf(src).filter((n) => n !== p.name);
+      b.from = { title: src, places: homes };
+    }
+  }
+
+  const pairs = new Map<string, PlaceBridge>();
+  for (const p of places) {
+    for (const b of p.books) {
+      for (const other of b.also) {
+        // 한 쌍을 한 번만 담는다. 이름 순으로 고정해 A∩B와 B∩A가 갈라지지 않게
+        const [a, z] = [p.name, other].sort();
+        const id = `${a}∩${z}`;
+        let bridge = pairs.get(id);
+        if (!bridge) {
+          bridge = { a, b: z, shared: [], sprouted: [] };
+          pairs.set(id, bridge);
+        }
+        if (!bridge.shared.includes(b.title)) bridge.shared.push(b.title);
+      }
+      // 뻗어나감도 자리를 잇는다
+      for (const other of b.from?.places ?? []) {
+        const [a, z] = [p.name, other].sort();
+        const id = `${a}∩${z}`;
+        let bridge = pairs.get(id);
+        if (!bridge) {
+          bridge = { a, b: z, shared: [], sprouted: [] };
+          pairs.set(id, bridge);
+        }
+        const edge = { from: b.from!.title, to: b.title };
+        if (!bridge.sprouted.some((e) => e.from === edge.from && e.to === edge.to)) {
+          bridge.sprouted.push(edge);
+        }
+      }
+    }
+  }
+
+  // 파일에 적어둔 겹침 글을 붙인다. 제목은 "자리 ∩ 자리"로 적는다
+  for (const [head, text] of notes) {
+    const parts = head.split("∩").map((s) => s.trim());
+    if (parts.length !== 2) continue;
+    const [a, z] = parts.sort();
+    const bridge = pairs.get(`${a}∩${z}`);
+    if (bridge) bridge.note = marked.parse(text.join("\n"), { async: false }) as string;
+  }
+
+  // 많이 겹치는 것을 먼저. 같으면 이름 순으로 고정해 빌드마다 같은 순서가 나온다
+  const weight = (b: PlaceBridge) => b.shared.length + b.sprouted.length;
+  const bridges = [...pairs.values()].sort(
+    (x, y) => weight(y) - weight(x) || x.a.localeCompare(y.a),
+  );
+
+  /*
+   * 자리 순서를 이어진 것끼리 가깝게 다시 놓는다.
+   *
+   * 호 그림이 어지러웠던 원인은 호의 개수가 아니라 길이였다. 이어진 자리가 멀리 떨어져
+   * 있으면 호가 크게 부푼다. **배치가 일을 하면 그림은 저절로 얕아진다.**
+   *
+   * 겹(적어둔 / 이어질 수 있는)은 그대로 지킨다 — 겹 안에서만 다시 놓는다.
+   * 가장 많이 이어진 자리에서 출발해 가장 세게 이어진 것을 차례로 붙인다.
+   * 같으면 이름 순으로 고정하므로 **빌드마다 같은 순서가 나온다.**
+   */
+  const tie = new Map<string, Map<string, number>>();
+  for (const b of bridges) {
+    const w = weight(b);
+    for (const [x, y] of [[b.a, b.b], [b.b, b.a]]) {
+      const m = tie.get(x) ?? new Map<string, number>();
+      m.set(y, w);
+      tie.set(x, m);
+    }
+  }
+  const degree = (n: string) =>
+    [...(tie.get(n)?.values() ?? [])].reduce((a, c) => a + c, 0);
+
+  const ordered: Place[] = [];
+  for (const layer of ["written", "possible"] as const) {
+    const pool = places.filter((p) => p.layer === layer);
+    const left = new Set(pool.map((p) => p.name));
+    const byName = new Map(pool.map((p) => [p.name, p]));
+    const pick = (from?: string) => {
+      const cands = [...left];
+      cands.sort(
+        (x, y) =>
+          (tie.get(from ?? "")?.get(y) ?? 0) - (tie.get(from ?? "")?.get(x) ?? 0) ||
+          degree(y) - degree(x) ||
+          x.localeCompare(y),
+      );
+      return cands[0];
+    };
+    let cur: string | undefined;
+    while (left.size) {
+      cur = pick(cur);
+      left.delete(cur);
+      ordered.push(byName.get(cur)!);
+    }
+  }
+
+  // 글이 붙은 이어짐은 양쪽 자리 칸에도 넣는다
+  for (const b of bridges) {
+    if (!b.note) continue;
+    for (const p of ordered) if (p.name === b.a || p.name === b.b) p.told.push(b);
+  }
+
+  return { places: ordered, bridges };
+}
+
+/* ---------------------------------------------------------------
+   장면 — 본문을 소제목에서 끊어 나눈다.
+
+   책 글은 이미 세 층으로 쓰여 있다(그때 / 이 책이 하는 일 / 지금 열리는 것).
+   한 덩어리로 뿌리면 **누가 말하는지가 안 보인다** — 그때 쓴 글과 나중에 붙인
+   조사가 같은 크기·같은 서체로 이어지기 때문이다. 층마다 목소리를 달리하려면
+   먼저 끊어야 한다.
+
+   새로 적을 것이 없다. `withHeadingIds()`가 이미 심어둔 `<h2 id>`가 경계다.
+   --------------------------------------------------------------- */
+
+export type Scene = {
+  id: string;
+  title: string;
+  /** 소제목을 뺀 본문 */
+  html: string;
+  /** 누가 말하는가 — 화면에서 서체가 갈린다 */
+  voice: "then" | "found" | "now";
+};
+
+/** 소제목으로 목소리를 정한다. 규칙에 없으면 조사한 것으로 본다 */
+function voiceOf(title: string): Scene["voice"] {
+  if (/그때|읽으면서|적어둔/.test(title)) return "then";
+  if (/지금|열리는|질문/.test(title)) return "now";
+  return "found";
+}
+
+export function splitScenes(html: string): Scene[] {
+  const out: Scene[] = [];
+  const re = /<h2 id="([^"]*)">([\s\S]*?)<\/h2>/g;
+  const heads: { id: string; title: string; at: number; end: number }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    heads.push({
+      id: m[1],
+      title: m[2].replace(/<[^>]+>/g, "").trim(),
+      at: m.index,
+      end: m.index + m[0].length,
+    });
+  }
+  // 소제목이 없으면 통째로 하나. 나누는 것이 목적이 아니라 목소리를 가르는 것이다
+  if (!heads.length) {
+    return html.trim()
+      ? [{ id: "body", title: "", html, voice: "found" }]
+      : [];
+  }
+  // 첫 소제목 앞에 글이 있으면 그것도 한 장면으로 둔다
+  const lead = html.slice(0, heads[0].at).trim();
+  if (lead) out.push({ id: "lead", title: "", html: lead, voice: "then" });
+
+  heads.forEach((h, i) => {
+    const to = i + 1 < heads.length ? heads[i + 1].at : html.length;
+    out.push({
+      id: h.id,
+      title: h.title,
+      html: html.slice(h.end, to).trim(),
+      voice: voiceOf(h.title),
+    });
+  });
+  return out;
 }
 
 /** 2026-09-09 -> 2026년 9월 */

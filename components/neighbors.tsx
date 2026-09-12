@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Neighbors, Section } from "@/lib/content";
+import { placeAnchor } from "@/lib/anchors";
 
 /**
  * 글 끝에 붙는 갈림길.
@@ -9,7 +10,8 @@ import type { Neighbors, Section } from "@/lib/content";
  * 「읽고 싶은 책들」의 「어디서」 칸. 없는 방향은 그리지 않는다.
  */
 export default function Neighbors({ n, dir }: { n: Neighbors; dir: Section }) {
-  const has = n.around.length || n.strands.length || n.sprouted.length;
+  const has =
+    n.around.length || n.strands.length || n.sprouted.length || n.places.length;
   if (!has) return null;
 
   return (
@@ -31,13 +33,45 @@ export default function Neighbors({ n, dir }: { n: Neighbors; dir: Section }) {
         </section>
       )}
 
+      {n.places.map((p) => (
+        <section key={p.name}>
+          <h2>
+            <Link href={`/threads/#${placeAnchor(p.name)}`}>{p.name}</Link>
+            <span className="tag">에 함께 있는 책</span>
+          </h2>
+          <p className="why">
+            {p.layer === "written"
+              ? "그때 적어둔 기록이 이 책들을 한자리에 모았습니다."
+              : "같은 문제를 다룬다고 보고 나란히 놓아본 책들입니다 — 이어지는지는 보는 중입니다."}{" "}
+            <Link href={`/threads/#${placeAnchor(p.name)}`}>자리</Link>에 전부 있습니다.
+          </p>
+          <ul>
+            {/* 너무 길어지지 않게 앞쪽만. 나머지는 자리로 보낸다 */}
+            {p.books.slice(0, 8).map((b) => (
+              <li key={b.title}>
+                {b.slug ? (
+                  <Link href={`/reading/${b.slug}/`}>{b.title}</Link>
+                ) : (
+                  <span className="t">{b.title}</span>
+                )}
+                {b.unread && <span className="by">아직 안 읽음</span>}
+                {b.also.length > 0 && <span className="via">{b.also.join(" · ")}</span>}
+              </li>
+            ))}
+          </ul>
+          {p.books.length > 8 && (
+            <p className="why">
+              <Link href={`/threads/#${placeAnchor(p.name)}`}>
+                이 자리의 나머지 {p.books.length - 8}권
+              </Link>
+            </p>
+          )}
+        </section>
+      ))}
+
       {n.strands.length > 0 && (
         <section>
-          <h2>같은 갈래에 걸린 것</h2>
-          <p className="why">
-            섹션은 매체로 나뉘지만 관심사는 그걸 가로지릅니다.{" "}
-            <Link href="/threads/">갈래</Link>에 전부 모여 있습니다.
-          </p>
+          <h2>같은 자리에 걸린 다른 글</h2>
           <ul>
             {n.strands.map(({ item, via }) => (
               <li key={`${item.section}-${item.title}`}>
@@ -47,7 +81,6 @@ export default function Neighbors({ n, dir }: { n: Neighbors; dir: Section }) {
                   <span className="t">{item.title}</span>
                 )}
                 <span className="by">{item.sectionKo}</span>
-                {/* 무엇을 함께 쓰는지. 이게 이웃인 이유다 */}
                 <span className="via">{via.join(" · ")}</span>
               </li>
             ))}

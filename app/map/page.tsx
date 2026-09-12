@@ -3,8 +3,7 @@ import {
   getEntries,
   getListSummaries,
   getList,
-  getByStrand,
-  STRAND_NAMES,
+  getPlaces,
   getTwice,
   getSproutGraph,
   getCorpus,
@@ -12,6 +11,7 @@ import {
 } from "@/lib/content";
 import SproutGraph, { SproutList } from "@/components/sprout-graph";
 import CorpusGrid from "@/components/corpus-grid";
+import { placeAnchor } from "@/lib/anchors";
 
 export const metadata = { title: "지도 — Eunchan Joe" };
 
@@ -26,7 +26,7 @@ const SECTIONS = [
 export default function MapPage() {
   const graph = getSproutGraph();
   const corpus = getCorpus();
-  const strands = getByStrand();
+  const { places, bridges } = getPlaces();
   const twice = getTwice("reading");
 
   return (
@@ -83,27 +83,21 @@ export default function MapPage() {
         );
       })}
 
-      {/* 2. 갈래 — 다섯 칸을 가로지르는 축 */}
+      {/* 2. 자리 — 다섯 칸을 가로질러 책과 글이 같은 문제에서 만나는 곳 */}
       <section className="mapblock">
         <h2>
-          <Link href="/threads/">갈래</Link>
-          <span className="desc">칸을 가로질러 같은 관심사에 걸리는 것</span>
+          <Link href="/threads/">자리</Link>
+          <span className="desc">
+            {places.length}개가 {bridges.length}군데에서 서로 이어진다
+          </span>
         </h2>
         <ul className="maplist wide">
-          {STRAND_NAMES.map((name) => {
-            const items = strands.get(name) ?? [];
-            return (
-              <li key={name}>
-                {/* 비어 있는 갈래도 적는다 — 없는 것까지 보여야 지도다 */}
-                {items.length ? (
-                  <Link href="/threads/">{name}</Link>
-                ) : (
-                  <span className="plain">{name}</span>
-                )}
-                <span className="n">{items.length ? items.length : "비어 있음"}</span>
-              </li>
-            );
-          })}
+          {places.map((p) => (
+            <li key={p.name}>
+              <Link href={`/threads/#${placeAnchor(p.name)}`}>{p.name}</Link>
+              <span className="n">{p.books.length + p.items.length}</span>
+            </li>
+          ))}
         </ul>
       </section>
 

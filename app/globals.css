@@ -8,8 +8,12 @@
    선까지 하늘빛으로 두는 것이 전체 인상을 가볍게 하는 데 제일 크게 작용한다.
 
    대비는 계산해서 맞췄다 (WCAG AA 4.5:1 기준):
-     라이트 — text 14.6:1 / muted 5.6:1 / accent 5.4:1 (맨 위 그러데이션 위에서도 4.8:1)
-     다크   — text 15.0:1 / muted 5.9:1 / accent 7.6:1
+     라이트 — text 14.6:1 / muted 7.2:1 / accent 5.4:1 (맨 위 그러데이션 위 6.4:1)
+     다크   — text 15.0:1 / muted 7.0:1 / accent 7.6:1
+
+   **보조 글자는 굵기도 함께 본다.** 본문이 350이라 회색·작은 글자가 겹치면
+   대비 수치가 기준을 넘어도 흐릿하게 읽힌다. WCAG는 보통 굵기를 전제한다.
+   그래서 0.76rem 보조 글자에는 400을 준다 — 색만 진하게 해선 안 풀린다.
    바탕을 하늘색으로 내린 만큼 글자색도 함께 진하게 했다. 이 조합이 AA 한계선 근처라
    바탕을 더 진하게 하려면 글자색을 또 조정해야 한다.
    --accent는 글자에 쓰므로 AA를 넘겨야 한다. 더 밝은 산호가 필요하면
@@ -23,7 +27,7 @@
   /* 바탕이 하늘색이라 얹히는 면은 바탕보다 밝게 — 그래야 떠 보인다 */
   --surface: #edf7fe;
   --text: #131b25;
-  --muted: #4f5d73;
+  --muted: #3f4d61;
   --rule: #b6dcf4;
   --accent: #a93814;
   --glow: #e8613c;
@@ -31,9 +35,28 @@
      이 색 위에서도 글자가 AA를 넘겨야 하므로 더 진하게는 못 간다 */
   --wash: #bde3fb;
 
-  --serif: var(--font-display), "Times New Roman", serif;
+  /* ── 목소리 넷 ────────────────────────────────────────────────
+     서체가 바뀌는 것이 곧 **지금 누가 말하고 있는가**의 표시다.
+     색 규칙(진한=본인 기록 / 연한=Claude)과 같은 말을 한 번 더 한다.  */
+
+  /* 사이트가 말한다 — UI·설명·목록·조사 결과 */
   --sans: var(--font-body), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
     "Segoe UI", sans-serif;
+  /* 글이 말한다 — 제목·질문·장면을 여는 문장. 한글이 실제로 세리프로 나온다 */
+  --read: var(--font-read), var(--font-display), "Apple SD Gothic Neo", serif;
+  /* 사람이 말한다 — 본인이 그때 직접 쓴 문장. 출처가 붙은 짧은 것에만 */
+  --hand: var(--font-hand), var(--font-read), cursive;
+  /* 숫자와 라틴. 이미 싣고 있던 폰트라 추가 비용이 없다 */
+  --serif: var(--font-display), "Times New Roman", serif;
+
+  /* ── 크기 계단 넷 ────────────────────────────────────────────
+     스물여섯 가지가 흩어져 있어 위계가 안 보였다. 넷으로 묶는다.
+     한 장면의 초점은 하나다 — 그러려면 대비가 세 배는 나야 한다.  */
+  --t-aside: 0.76rem; /* 보조 — 상태·분류·개수·출처 */
+  --t-body: 1rem; /* 본문 */
+  --t-lead: 1.6rem; /* 장면을 여는 문장, 손글씨 */
+  --t-scene: 3.2rem; /* 한 장면의 초점 하나 */
+  --t-count: 6rem; /* 숫자. 217 같은 수 */
 
   /* 본문 한 줄이 너무 길어지지 않게 묶어두는 폭 */
   --measure: 34rem;
@@ -53,7 +76,7 @@
     --bg: #131a23;
     --surface: #1c242f;
     --text: #e8eef5;
-    --muted: #8a97a8;
+    --muted: #98a5b6;
     --rule: #2a3441;
     --accent: #ff8a63;
     --glow: #ff9d7a;
@@ -65,11 +88,21 @@
   --bg: #131a23;
   --surface: #1c242f;
   --text: #e8eef5;
-  --muted: #8a97a8;
+  --muted: #98a5b6;
   --rule: #2a3441;
   --accent: #ff8a63;
   --glow: #ff9d7a;
   --wash: #1a2532;
+}
+
+/* 좁은 화면에서는 장면이 화면을 꽉 채우면 안 된다.
+   아래가 살짝 보여야 더 있다는 걸 알고 스크롤한다 */
+@media (max-width: 34rem) {
+  :root {
+    --t-lead: 1.4rem;
+    --t-scene: 2rem;
+    --t-count: 3.5rem;
+  }
 }
 
 * {
@@ -864,6 +897,476 @@ a {
   }
 }
 
+/* ── 보조 글자의 굵기 ────────────────────────────────────────
+   얇은 획 + 회색 + 작은 크기가 겹치면 대비 수치가 기준을 넘어도 흐릿하다.
+   색을 진하게 하는 것만으로는 안 풀려서 굵기를 함께 올린다.           */
+.strand.place .when,
+.pbooks .yet,
+.pbooks a.also,
+.pbooks .why,
+.opening .from,
+.legend,
+.arclist .shared,
+.maplist.toc,
+.strand.place .missed h3,
+.strand.place .told h3 {
+  font-weight: 400;
+}
+
+/* 세부 설명 덩어리는 본문과 같은 굵기로. 길게 읽는 글이라 얇으면 피로하다 */
+.strand.place .why,
+.strand.place .missed .prose,
+.strand.place .told .prose,
+.mapnote,
+.blockhead p {
+  font-weight: 400;
+}
+
+/* ── 책 한 권 — 장면으로 읽는다 ──────────────────────────────
+   목소리가 셋이다. 서체가 바뀌는 것이 곧 "지금 누가 말하는가"다.
+     v-then  본인이 그때 쓴 것       → 세리프
+     v-found 나중에 조사해 붙인 것    → 산세리프 (기본)
+     v-now   지금 열리는 질문         → 세리프
+   손글씨는 여는 장면의 한 문장에만. 길게 쓰면 못 읽는다.          */
+
+.opening {
+  padding: 4rem 0 5rem;
+  max-width: var(--measure);
+}
+
+/* 본인이 고른 한 문장. 캘리그래피가 하는 일 — 한 문장, 큰 여백, 작은 출처 */
+.opening .said {
+  font-family: var(--hand);
+  font-size: var(--t-scene);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  margin: 0 0 2.5rem;
+  text-wrap: balance;
+}
+
+.opening .from {
+  font-size: var(--t-aside);
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+.scene {
+  padding: 0 0 1rem;
+}
+
+.scene h2 {
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 3rem 0 1rem;
+  color: var(--muted);
+}
+
+/* 그때 쓴 것과 지금 열리는 질문 — 글이 말하는 자리라 세리프 */
+.scene.v-then .prose,
+.scene.v-now .prose {
+  font-family: var(--read);
+  font-size: 1.02rem;
+  line-height: 1.95;
+}
+
+/* 지금 열리는 것은 질문만 있는 자리다. 답이 비어 있는 것이 정직하다 */
+.scene.v-now {
+  border-top: 1px solid var(--rule);
+  margin-top: 2.5rem;
+  padding-top: 0.5rem;
+}
+
+.scene.v-now h2 {
+  color: var(--accent);
+}
+
+/* 조사해 붙인 층. 출처가 많아 본문과 같은 크기면 흐름이 끊긴다 */
+.scene.v-found .prose {
+  font-size: 0.97rem;
+}
+
+@media (max-width: 34rem) {
+  .opening {
+    padding: 2.5rem 0 3.5rem;
+  }
+  .opening .said {
+    margin-bottom: 1.75rem;
+  }
+}
+
+/* --- 자리 (/threads) — 호 그림과 겹침 ---------------------------
+   새 색을 만들지 않는다. --rule 은 연한 선, --accent 는 진한 선(본문용),
+   --glow 는 장식 전용이라 글자에 쓰지 않는다.                        */
+
+.arcs {
+  overflow-x: auto;
+  margin: 1.5rem 0 0.5rem;
+}
+
+/* 너비·높이를 속성으로 박아 비율을 고정한다. 높이를 CSS로 잡으면 위아래가 눌린다 */
+.arcs svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 34rem;
+}
+
+.arc {
+  fill: none;
+  stroke: var(--rule);
+}
+
+/* 글이 붙은 이어짐만 진하게. 선이 곧 읽을 것이 있다는 표시가 된다 */
+.arc.told {
+  stroke: var(--accent);
+  opacity: 0.55;
+}
+
+/* 한 권만 나눠 쓰는 이어짐. 자리 칸의 ↗ 문에 이미 있으니 여기선 조용히 */
+.arc.thin {
+  opacity: 0.4;
+}
+
+/* 뻗어나감으로 이어진 것 — 같은 책을 쓰는 것과 다른 종류라 점선으로 가른다 */
+.arc.sprout {
+  stroke-dasharray: 3 3;
+}
+
+.arclist .sprout {
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.arclist .sprout::before {
+  content: "↳ ";
+  color: var(--accent);
+}
+
+.pnode.then {
+  fill: var(--rule);
+}
+.pnode.both {
+  fill: var(--accent);
+}
+/* 지금 열려 있는 자리는 아직 안 채워진 것이라 테두리만 */
+.pnode.now {
+  fill: var(--bg);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.pnode.faint {
+  opacity: 0.45;
+}
+
+.arcs text {
+  font-family: var(--sans);
+  font-size: 12px;
+  dominant-baseline: middle;
+  fill: var(--text);
+}
+
+.arcs text.faint {
+  fill: var(--muted);
+}
+
+.arcs text .n {
+  fill: var(--muted);
+  font-size: 10.5px;
+}
+
+/* 좁은 화면에서 그림 대신 뜨는 목록. 같은 자료를 다르게 그린 것이다 */
+.arclist {
+  display: none;
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+}
+
+.arclist li {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.88rem;
+}
+
+.arclist .pair {
+  display: block;
+}
+
+.arclist .cap {
+  color: var(--accent);
+  padding: 0 0.15rem;
+}
+
+.arclist .shared {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 36rem) {
+  .arcs {
+    display: none;
+  }
+  .arclist {
+    display: block;
+  }
+}
+
+/* 다리에 붙은 글 */
+.bridge {
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--rule);
+  max-width: var(--measure);
+}
+
+.bridge h3 {
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin: 0 0 0.6rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.bridge h3 .cap {
+  color: var(--accent);
+  padding: 0 0.4rem;
+}
+
+.bridge .prose p {
+  margin: 0 0 0.8rem;
+}
+
+/* ── 자리 한 칸 ────────────────────────────────────────────────
+   시각 문법 (docs/context/design.md):
+     색  — --accent = 본인 기록에서 나온 것 / --rule = Claude가 놓은 것
+     층위 — 핵심 1rem·--text / 보조 .76rem·--muted / 세부 .86rem + 왼쪽 선
+   신호를 더하면 범례도 더한다.                                    */
+
+/* 보조 — 상태·분류. 값이 하나다 */
+.strand.place .when {
+  font-size: 0.76rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  margin: -0.5rem 0 0.9rem;
+}
+
+/* 「이어질 수 있는 자리」는 Claude가 놓은 것이라 진한 색을 쓰지 않는다 */
+.strand.place .when .layer {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.strand.possible h2 {
+  color: var(--muted);
+}
+
+/* 세부 — 근거·설명. 전부 왼쪽 선 + 들여쓰기로 묶는다.
+   "이건 앞의 것에 딸린 설명"이 모양 하나로 전달된다 */
+.strand.place .why,
+.strand.place .missed,
+.strand.place .told,
+.pbooks .why {
+  max-width: var(--measure);
+  font-size: 0.86rem;
+  line-height: 1.75;
+  border-left: 2px solid var(--rule);
+  padding-left: 1rem;
+  margin: 0 0 1.1rem;
+}
+
+/* 본인 기록에서 나온 세부는 진한 선 */
+.strand.place .missed,
+.strand.place .told {
+  border-left-color: var(--accent);
+}
+
+.strand.place .why p,
+.strand.place .missed .prose p,
+.strand.place .told .prose p {
+  margin: 0 0 0.6rem;
+}
+
+.strand.place .missed .prose p,
+.strand.place .why p {
+  color: var(--muted);
+}
+
+/* 세부 덩어리의 이름표 — 보조 크기 */
+.strand.place .missed h3,
+.strand.place .told h3 {
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+  margin: 0 0 0.4rem;
+}
+
+/* ── 범례 — 화면에 그려진 신호만 설명한다 ─────────────────── */
+
+.legend .k.line {
+  width: 1.1rem;
+  height: 0;
+  border-radius: 0;
+  border-top: 1.5px solid var(--rule);
+}
+
+.legend .k.line.dash {
+  border-top-style: dashed;
+}
+
+.legend .k.line.told {
+  border-top-color: var(--accent);
+  border-top-width: 2.5px;
+}
+
+.legend .k.dot.then {
+  background: var(--rule);
+}
+
+.legend .k.dot.both {
+  background: var(--accent);
+}
+
+.legend .k.dot.now {
+  background: var(--bg);
+  border: 1.5px solid var(--accent);
+}
+
+.legend em {
+  font-style: normal;
+  opacity: 0.75;
+  flex-basis: 100%;
+}
+
+/* 어디서 시작할지 알려주는 한 줄 */
+.mapnote.lead {
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+/* 차례 — 긴 화면의 입구 */
+.maplist.toc {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 1.1rem 0;
+  margin: 2rem 0 0;
+  font-size: 0.86rem;
+}
+
+.maplist.toc a {
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+
+.maplist.toc a:hover {
+  color: var(--accent);
+}
+
+/* 다리 글의 제목은 건너갈 자리 이름이다 */
+.strand.place .told h3 a {
+  color: var(--accent);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* 호에서 뛰어오면 어디로 왔는지 잠깐 보이게 */
+.bridge:target,
+.strand.place:target {
+  background: var(--surface);
+  border-radius: 2px;
+}
+
+/* 글이 붙은 호는 누를 수 있다 */
+.arcs a {
+  cursor: pointer;
+}
+
+.arcs a:hover .arc {
+  opacity: 1;
+  stroke: var(--glow);
+}
+
+/* 걸린 책들. 이름만 촘촘히 흐르게 두고, 여러 자리에 걸린 책만 문을 낸다 */
+.pbooks {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+}
+
+/* 책마다 근거가 붙을 수 있어 한 줄이 아니라 한 덩어리가 된다 */
+.pbooks {
+  display: block;
+}
+
+.pbooks li {
+  font-size: 0.86rem;
+  padding: 0.3rem 0;
+}
+
+.pbooks .head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.pbooks .yet {
+  font-size: 0.76rem;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+/* 왜 이 자리에 걸리는지. Claude가 조사로 이은 것이라 연한 선이다 */
+.pbooks .why {
+  display: block;
+  color: var(--muted);
+  margin: 0.25rem 0 0.4rem;
+}
+
+.pbooks .why a {
+  color: var(--accent);
+  border-bottom: 1px solid var(--rule);
+}
+
+.pbooks .t {
+  color: var(--muted);
+}
+
+.pbooks a {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+}
+
+.pbooks a:hover {
+  border-bottom-color: var(--glow);
+}
+
+/* 다른 자리로 건너뛰는 문 */
+.pbooks a.also {
+  font-size: 0.76rem;
+  color: var(--accent);
+  border: 0;
+  white-space: nowrap;
+}
+
+.pbooks a.also::before {
+  content: "↗ ";
+}
+
+.tail {
+  max-width: var(--measure);
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding: 2.5rem 0 0;
+}
+
 /* --- 묶음 머리 — 목록과 낱개 글 사이를 가르는 자리 --------------- */
 
 .blockhead {
@@ -1497,6 +2000,14 @@ a {
  * 안에 글자가 없어서 줄어들어도 모양이 남는다.
  * 그래서 뻗어나간 그림과 달리 좁은 화면에서 숨기지 않는다.
  */
+/* 면의 테두리 — 점들이 평면 위에 놓인 것으로 읽히게 하는 유일한 선 */
+.corpus .plane {
+  fill: var(--rule);
+  fill-opacity: 0.14;
+  stroke: var(--rule);
+  stroke-width: 0.75;
+}
+
 .corpus svg {
   display: block;
   width: 100%;
